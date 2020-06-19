@@ -113,6 +113,14 @@
             "changes": [
                 "org.gradle.api.internal.AbstractTask.setLoggerMessageRewriter(org.gradle.internal.logging.slf4j.ContextAwareTaskLogger$MessageRewriter)"
             ]
+        },
+        {
+            "type": "org.gradle.api.InternalApi",
+            "member": "Class org.gradle.api.InternalApi",
+            "acceptation": "This interface will not be incubating",
+            "changes": [
+                "Interface has been added"
+            ]
         }
     ]
 }
