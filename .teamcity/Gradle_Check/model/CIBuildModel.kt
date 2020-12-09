@@ -195,7 +195,7 @@ data class GradleSubproject(val name: String, val path: String, val unitTests: B
 
             testCoverage,
             stage,
-            listOf(name)
+            listOf(path)
         )
     }
 
