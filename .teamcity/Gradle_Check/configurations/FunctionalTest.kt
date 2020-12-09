@@ -86,13 +86,13 @@ fun getTestTaskName(testCoverage: TestCoverage, stage: Stage, subprojects: List<
     val testTaskName = "${testCoverage.testType.name}Test"
     return when {
         testCoverage.testDistribution -> {
-            return testTaskName
+            return ":$testTaskName"
         }
         subprojects.isEmpty() -> {
-            testTaskName
+            ":$testTaskName"
         }
         else -> {
-            subprojects.joinToString(" ") { "$it:$testTaskName" }
+            subprojects.joinToString(" ") { ":$it:$testTaskName" }
         }
     }
 }
