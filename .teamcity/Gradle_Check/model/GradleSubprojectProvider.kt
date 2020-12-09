@@ -23,9 +23,9 @@ import model.TestCoverage
 import java.io.File
 
 val ignoredSubprojects = listOf(
-    "subprojects:soak", // soak test
-    "subprojects:distributions-integ-tests", // build distribution testing
-    "subprojects:architecture-test" // sanity check
+    "soak", // soak test
+    "distributions-integ-tests", // build distribution testing
+    "architecture-test" // sanity check
 )
 
 interface GradleSubprojectProvider {
