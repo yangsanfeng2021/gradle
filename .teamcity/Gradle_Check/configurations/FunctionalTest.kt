@@ -85,6 +85,9 @@ fun enableExperimentalTestDistribution(testCoverage: TestCoverage, subprojects: 
 fun getTestTaskName(testCoverage: TestCoverage, stage: Stage, subprojects: List<String>): String {
     val testTaskName = "${testCoverage.testType.name}Test"
     return when {
+        testTaskName == "soakTest" -> {
+            ":end-to-end-tests:soak:soakTest"
+        }
         testCoverage.testDistribution -> {
             return ":$testTaskName"
         }
