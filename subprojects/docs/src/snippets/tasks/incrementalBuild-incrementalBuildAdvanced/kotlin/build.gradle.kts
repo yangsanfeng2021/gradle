@@ -89,3 +89,8 @@ tasks.register<Instrument>("alwaysInstrumentClasses") {
 tasks.build {
     dependsOn("processTemplates", "processTemplates2")
 }
+
+extensions.findByName("buildScan")?.withGroovyBuilder {
+    setProperty("termsOfServiceUrl", "https://gradle.com/terms-of-service")
+    setProperty("termsOfServiceAgree", "yes")
+}
