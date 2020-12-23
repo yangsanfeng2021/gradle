@@ -23,6 +23,7 @@ import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.internal.file.copy.CopyActionExecuter;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.model.Removed;
 import org.gradle.api.model.ReplacedBy;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -102,9 +103,9 @@ public abstract class AbstractArchiveTask extends AbstractCopyTask {
      * <code>[archiveBaseName]-[archiveAppendix]-[archiveVersion]-[archiveClassifier].[archiveExtension]</code>
      *
      * @return the archive name.
-     * @deprecated Use {@link #getArchiveFileName()}
+     *  Use {@link #getArchiveFileName()}
      */
-    @Deprecated
+    @Removed(version = "7.0")
     @ReplacedBy("archiveFileName")
     public String getArchiveName() {
         // This is used by the Kotlin plugin, we should upstream a fix to avoid this API first.
@@ -116,9 +117,8 @@ public abstract class AbstractArchiveTask extends AbstractCopyTask {
      * Sets the archive name.
      *
      * @param name the archive name.
-     * @deprecated Use {@link #getArchiveFileName()}
      */
-    @Deprecated
+    @Removed(version = "7.0")
     public void setArchiveName(String name) {
         DeprecationLogger.deprecateProperty(AbstractArchiveTask.class, "archiveName").replaceWith("archiveFileName")
             .willBeRemovedInGradle7()
@@ -144,9 +144,8 @@ public abstract class AbstractArchiveTask extends AbstractCopyTask {
      * The path where the archive is constructed. The path is simply the {@code destinationDirectory} plus the {@code archiveFileName}.
      *
      * @return a File object with the path to the archive
-     * @deprecated Use {@link #getArchiveFile()}
      */
-    @Deprecated
+    @Removed(version = "7.0")
     @ReplacedBy("archiveFile")
     public File getArchivePath() {
         // This is used by the Kotlin plugin, we should upstream a fix to avoid this API first.
@@ -180,9 +179,8 @@ public abstract class AbstractArchiveTask extends AbstractCopyTask {
      * Returns the directory where the archive is generated into.
      *
      * @return the directory
-     * @deprecated Use {@link #getDestinationDirectory()}
      */
-    @Deprecated
+    @Removed(version = "7.0")
     @ReplacedBy("destinationDirectory")
     public File getDestinationDir() {
         DeprecationLogger.deprecateProperty(AbstractArchiveTask.class, "destinationDir").replaceWith("destinationDirectory").willBeRemovedInGradle7().withDslReference().nagUser();
@@ -192,9 +190,8 @@ public abstract class AbstractArchiveTask extends AbstractCopyTask {
     /**
      * Sets the destination dir.
      *
-     * @deprecated Use {@link #getDestinationDirectory()}
      */
-    @Deprecated
+    @Removed(version = "7.0")
     public void setDestinationDir(File destinationDir) {
         DeprecationLogger.deprecateProperty(AbstractArchiveTask.class, "destinationDir").replaceWith("destinationDirectory").willBeRemovedInGradle7().withDslReference().nagUser();
         archiveDestinationDirectory.set(getProject().file(destinationDir));
@@ -214,10 +211,9 @@ public abstract class AbstractArchiveTask extends AbstractCopyTask {
      * Returns the base name of the archive.
      *
      * @return the base name. May be null.
-     * @deprecated Use {@link #getArchiveBaseName()}
      */
     @Nullable
-    @Deprecated
+    @Removed(version = "7.0")
     @ReplacedBy("archiveBaseName")
     public String getBaseName() {
         DeprecationLogger.deprecateProperty(AbstractArchiveTask.class, "baseName").replaceWith("archiveBaseName").willBeRemovedInGradle7().withDslReference().nagUser();
@@ -227,9 +223,8 @@ public abstract class AbstractArchiveTask extends AbstractCopyTask {
     /**
      * Sets the base name.
      *
-     * @deprecated Use {@link #getArchiveBaseName()}
      */
-    @Deprecated
+    @Removed(version = "7.0")
     public void setBaseName(@Nullable String baseName) {
         DeprecationLogger.deprecateProperty(AbstractArchiveTask.class, "baseName").replaceWith("archiveBaseName").willBeRemovedInGradle7().withDslReference().nagUser();
         archiveBaseName.convention(baseName);
@@ -251,10 +246,9 @@ public abstract class AbstractArchiveTask extends AbstractCopyTask {
      * Returns the appendix part of the archive name, if any.
      *
      * @return the appendix. May be null
-     * @deprecated Use {@link #getArchiveAppendix()}
      */
     @Nullable
-    @Deprecated
+    @Removed(version = "7.0")
     @ReplacedBy("archiveAppendix")
     public String getAppendix() {
         DeprecationLogger.deprecateProperty(AbstractArchiveTask.class, "appendix").replaceWith("archiveAppendix").willBeRemovedInGradle7().withDslReference().nagUser();
@@ -264,9 +258,8 @@ public abstract class AbstractArchiveTask extends AbstractCopyTask {
     /**
      * Sets the appendix.
      *
-     * @deprecated Use {@link #getArchiveAppendix()}
      */
-    @Deprecated
+    @Removed(version = "7.0")
     public void setAppendix(@Nullable String appendix) {
         // This is used by the Kotlin plugin, we should upstream a fix to avoid this API first.
         // DeprecationLogger.nagUserWith(DeprecationMessage.replacedProperty("appendix", "archiveAppendix"));
@@ -289,10 +282,9 @@ public abstract class AbstractArchiveTask extends AbstractCopyTask {
      * Returns the version part of the archive name, if any.
      *
      * @return the version. May be null.
-     * @deprecated Use {@link #getArchiveVersion()}
      */
     @Nullable
-    @Deprecated
+    @Removed(version = "7.0")
     @ReplacedBy("archiveVersion")
     public String getVersion() {
         DeprecationLogger.deprecateProperty(AbstractArchiveTask.class, "version").replaceWith("archiveVersion").willBeRemovedInGradle7().withDslReference().nagUser();
@@ -302,9 +294,8 @@ public abstract class AbstractArchiveTask extends AbstractCopyTask {
     /**
      * Sets the version.
      *
-     * @deprecated Use {@link #getArchiveVersion()}
      */
-    @Deprecated
+    @Removed(version = "7.0")
     public void setVersion(@Nullable String version) {
         DeprecationLogger.deprecateProperty(AbstractArchiveTask.class, "version").replaceWith("archiveVersion").willBeRemovedInGradle7().withDslReference().nagUser();
         archiveVersion.convention(version);
@@ -325,10 +316,9 @@ public abstract class AbstractArchiveTask extends AbstractCopyTask {
     /**
      * Returns the extension part of the archive name.
      *
-     * @deprecated Use {@link #getArchiveExtension()}
      */
     @Nullable
-    @Deprecated
+    @Removed(version = "7.0")
     @ReplacedBy("archiveExtension")
     public String getExtension() {
         DeprecationLogger.deprecateProperty(AbstractArchiveTask.class, "extension").replaceWith("archiveExtension").willBeRemovedInGradle7().withDslReference().nagUser();
@@ -337,10 +327,8 @@ public abstract class AbstractArchiveTask extends AbstractCopyTask {
 
     /**
      * Sets the extension.
-     *
-     * @deprecated Use {@link #getArchiveExtension()}
      */
-    @Deprecated
+    @Removed(version = "7.0")
     public void setExtension(@Nullable String extension) {
         DeprecationLogger.deprecateProperty(AbstractArchiveTask.class, "extension").replaceWith("archiveExtension").willBeRemovedInGradle7().withDslReference().nagUser();
         archiveExtension.convention(extension);
@@ -361,10 +349,9 @@ public abstract class AbstractArchiveTask extends AbstractCopyTask {
      * Returns the classifier part of the archive name, if any.
      *
      * @return The classifier. May be null.
-     * @deprecated Use {@link #getArchiveClassifier()}
      */
     @Nullable
-    @Deprecated
+    @Removed(version = "7.0")
     @ReplacedBy("archiveClassifier")
     public String getClassifier() {
         DeprecationLogger.deprecateProperty(AbstractArchiveTask.class, "classifier").replaceWith("archiveClassifier").willBeRemovedInGradle7().withDslReference().nagUser();
@@ -374,9 +361,8 @@ public abstract class AbstractArchiveTask extends AbstractCopyTask {
     /**
      * Sets the classifier.
      *
-     * @deprecated Use {@link #getArchiveClassifier()}
      */
-    @Deprecated
+    @Removed(version = "7.0")
     public void setClassifier(@Nullable String classifier) {
         // This is used by the Kotlin plugin, we should upstream a fix to avoid this API first.
         // DeprecationLogger.deprecateProperty(AbstractArchiveTask.class, "classifier").replaceWith("archiveClassifier").withDslReference().nagUser();

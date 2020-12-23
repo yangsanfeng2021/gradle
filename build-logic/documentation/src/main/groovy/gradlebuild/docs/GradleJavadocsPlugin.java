@@ -16,15 +16,19 @@
 
 package gradlebuild.docs;
 
+import com.google.common.base.CharMatcher;
+import org.apache.commons.lang.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.Transformer;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.quality.Checkstyle;
 import org.gradle.api.plugins.quality.CheckstyleExtension;
+import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.TaskProvider;
@@ -33,6 +37,7 @@ import org.gradle.external.javadoc.StandardJavadocDocletOptions;
 import gradlebuild.basics.BuildEnvironment;
 
 import java.io.File;
+import java.io.FilterReader;
 
 /**
  * Generates Javadocs in a particular way.
@@ -49,6 +54,34 @@ public class GradleJavadocsPlugin implements Plugin<Project> {
         generateJavadocs(project, layout, tasks, extension);
     }
 
+    /**
+     * Primitive way to remove methods annotated with @Removed annotation
+     */
+    private static class DeleteRemovedMethodsTransformer implements Transformer<String, String> {
+
+        private boolean removedFound = false;
+        private int numOfOpenScopes = 0;
+
+        @Override
+        public String transform(String line) {
+            if (line.contains("@Removed")) {
+                removedFound = true;
+                return null;
+            }
+
+            if (removedFound) {
+                int newNumOfOpenScopes = numOfOpenScopes + CharMatcher.is('{').countIn(line) - CharMatcher.is('}').countIn(line);
+                if (numOfOpenScopes !=0 && newNumOfOpenScopes == 0) {
+                    removedFound = false;
+                }
+                numOfOpenScopes = newNumOfOpenScopes;
+                return null;
+            }
+
+             return line;
+        }
+    }
+
     private void generateJavadocs(Project project, ProjectLayout layout, TaskContainer tasks, GradleDocumentationExtension extension) {
         // TODO: Staging directory should be a part of the Javadocs extension
         // TODO: Pull out more of this configuration into the extension if it makes sense
@@ -58,7 +91,17 @@ public class GradleJavadocsPlugin implements Plugin<Project> {
         // TODO: This breaks if version is changed later
         Object version = project.getVersion();
 
+        TaskProvider<Copy> filterSources = tasks.register("prepareAllSources", Copy.class, task -> {
+            task.from(extension.getDocumentedSource());
+            task.into(layout.getBuildDirectory().dir("javadoc-input"));
+            task.setIncludeEmptyDirs(false);
+            task.filter(new DeleteRemovedMethodsTransformer());
+        });
+
+
+
         TaskProvider<Javadoc> javadocAll = tasks.register("javadocAll", Javadoc.class, task -> {
+            task.dependsOn(filterSources);
             task.setGroup("documentation");
             task.setDescription("Generate Javadocs for all API classes");
 
@@ -84,8 +127,9 @@ public class GradleJavadocsPlugin implements Plugin<Project> {
             // TODO: This breaks the provider
             options.links(javadocs.getJavaApi().get().toString(), javadocs.getGroovyApi().get().toString());
 
-            task.source(extension.getDocumentedSource());
+            task.source(layout.getBuildDirectory().dir("javadoc-input"));
 
+            System.out.println("Donat:" + extension.getClasspath().getAsFileTree().getFiles());
             task.setClasspath(extension.getClasspath());
 
             // TODO: This should be in Javadoc task
