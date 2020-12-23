@@ -20,7 +20,9 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 import org.gradle.api.GradleException;
+import org.gradle.api.model.Removed;
 import org.gradle.internal.classanalysis.AsmConstants;
 import org.gradle.internal.classpath.ClasspathBuilder;
 import org.gradle.internal.classpath.ClasspathEntryVisitor;
@@ -29,6 +31,7 @@ import org.gradle.internal.installation.GradleRuntimeShadedJarDetector;
 import org.gradle.internal.logging.progress.ProgressLogger;
 import org.gradle.internal.logging.progress.ProgressLoggerFactory;
 import org.gradle.internal.progress.PercentageProgressFormatter;
+import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -45,6 +48,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -85,6 +89,12 @@ class RuntimeShadedJarCreator {
 
     private void createFatJar(final File outputJar, final Iterable<? extends File> files, final ProgressLogger progressLogger) {
         classpathBuilder.jar(outputJar, builder -> processFiles(builder, files, progressLogger));
+        System.out.println("Output jar:" + outputJar);
+        try {
+            Files.copy(outputJar, new File("/tmp/gradle-api.jar"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void processFiles(ClasspathBuilder.EntryBuilder builder, Iterable<? extends File> files, ProgressLogger progressLogger) throws IOException {
@@ -210,7 +220,7 @@ class RuntimeShadedJarCreator {
             // do not include module-info files, as they would represent a bundled dependency module, instead of Gradle itself
             return;
         }
-        byte[] bytes = entry.getContent();
+        byte[] bytes = filterRemoved(className, entry.getContent());
         byte[] remappedClass = remapClass(className, bytes);
 
         String remappedClassName = remapper.maybeRelocateResource(className);
@@ -231,6 +241,81 @@ class RuntimeShadedJarCreator {
         }
 
         return classWriter.toByteArray();
+    }
+
+    private byte[] filterRemoved(String className, byte[] bytes) {
+        ClassReader classReader = new ClassReader(bytes);
+        ClassWriter classWriter = new ClassWriter(0);
+        RemovedMethodsCollector removedMethodsCollector = new RemovedMethodsCollector(classWriter, className);
+        classReader.accept(removedMethodsCollector, 0);
+        classReader.accept(new RemovedClassCleaner(classWriter, removedMethodsCollector.scanner.deprecatedSignatures), 0);
+        return classWriter.toByteArray();
+    }
+
+
+    static class MethodAnnotationScanner extends MethodVisitor {
+
+        private static final String REMOVED_ANNOTATION_DESCRIPTOR = "L" + Removed.class.getCanonicalName().replaceAll("\\.", "/") + ";";
+
+        private String signature;
+        List<String> deprecatedSignatures = new LinkedList<>();
+        String className;
+
+        public MethodAnnotationScanner() {
+            super(AsmConstants.ASM_LEVEL);
+        }
+
+        @Override
+        public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
+            if (descriptor.equals(REMOVED_ANNOTATION_DESCRIPTOR)) {
+                deprecatedSignatures.add(signature);
+            }
+            return super.visitAnnotation(descriptor, visible);
+        }
+
+        public void setSignature(String signature) {
+            this.signature = signature;
+        }
+
+        public void setClassName(String className) {
+            this.className = className;
+        }
+    }
+
+    private static class RemovedMethodsCollector extends ClassVisitor {
+
+        MethodAnnotationScanner scanner = new MethodAnnotationScanner();
+        private final String className;
+
+        public RemovedMethodsCollector(ClassVisitor classVisitor,String className) {
+            super(AsmConstants.ASM_LEVEL, classVisitor);
+            this.className = className;
+        }
+
+        @Override
+        public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+            scanner.setClassName(className);
+            scanner.setSignature(name + descriptor);
+            return scanner;
+        }
+    }
+
+    private static class RemovedClassCleaner extends ClassVisitor {
+
+        private HashSet<String> deprecatedSignatures;
+
+        public RemovedClassCleaner(ClassVisitor classVisitor, List<String> deprecatedSignatures) {
+            super(AsmConstants.ASM_LEVEL, classVisitor);
+            this.deprecatedSignatures = new HashSet<String>(deprecatedSignatures);
+        }
+
+        @Override
+        public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+            if (deprecatedSignatures.contains(name + descriptor)) {
+                return null;
+            }
+            return super.visitMethod(access, name, descriptor, signature, exceptions);
+        }
     }
 
     private static class ShadingClassRemapper extends ClassRemapper {
