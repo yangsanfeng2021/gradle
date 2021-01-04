@@ -17,7 +17,6 @@
 package org.gradle.api.model;
 
 import org.gradle.api.Incubating;
-import org.gradle.api.tasks.Internal;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -26,7 +25,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * <p>The annotated method is removed from the Gradle API</p>
+ * Marks removed methods in the Gradle API.
+ *
+ * <p>This annotation represents an intermediate state between deprecation actual deletion. The annotated methods are stripped from the generated API jar and from the Javadoc. Plugins won't see the
+ * removed methods at compile time. At the same time, they are still present in the Gradle runtime to maintain backward compatibility with existing plugins.</p>
+ *
+ * <p>The policy is to delete methods with @Removed annotation in the next major Gradle release.</p>
  *
  * @since 7.0
  */
@@ -37,9 +41,7 @@ import java.lang.annotation.Target;
 public @interface Removed {
 
     /**
-     * The Gradle version the method was removed.
-     *
-     * @return The Gradle version.
+     * The Gradle version that introduced the annotation.
      */
     String version();
 }
