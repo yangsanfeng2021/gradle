@@ -53,7 +53,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -94,12 +93,6 @@ class RuntimeShadedJarCreator {
 
     private void createFatJar(final File outputJar, final Iterable<? extends File> files, final ProgressLogger progressLogger) {
         classpathBuilder.jar(outputJar, builder -> processFiles(builder, files, progressLogger));
-        System.out.println("Output jar:" + outputJar);
-        try {
-            Files.copy(outputJar, new File("/tmp/gradle-api.jar"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private void processFiles(ClasspathBuilder.EntryBuilder builder, Iterable<? extends File> files, ProgressLogger progressLogger) throws IOException {
@@ -225,7 +218,7 @@ class RuntimeShadedJarCreator {
             // do not include module-info files, as they would represent a bundled dependency module, instead of Gradle itself
             return;
         }
-        byte[] bytes = filterRemoved(className, entry.getContent());
+        byte[] bytes = filterMethodsWithRemovedAnnotation(className, entry.getContent());
         RemappingResult remappingResult = remapClass(className, bytes);
         String pkgPart = parentPackage(className);
         if (remappingResult.isExcluded || isExcluded(pkgPart, excludedPackages)) {
@@ -295,76 +288,84 @@ class RuntimeShadedJarCreator {
         }
     }
 
-    private byte[] filterRemoved(String className, byte[] bytes) {
+    private byte[] filterMethodsWithRemovedAnnotation(String className, byte[] bytes) {
         ClassReader classReader = new ClassReader(bytes);
         ClassWriter classWriter = new ClassWriter(0);
-        RemovedMethodsCollector removedMethodsCollector = new RemovedMethodsCollector(classWriter, className);
+        RemovedMethodsCollector removedMethodsCollector = new RemovedMethodsCollector(classWriter);
         classReader.accept(removedMethodsCollector, 0);
-        classReader.accept(new RemovedClassCleaner(classWriter, removedMethodsCollector.scanner.deprecatedSignatures), 0);
+        classReader.accept(new RemovedClassCleaner(classWriter, removedMethodsCollector.collector.getMethodsWithRemovedAnnotation()), 0);
         return classWriter.toByteArray();
     }
 
+    private static class MethodDescriptors {
+        private final Set<String> descriptors = new HashSet<>();
 
-    static class MethodAnnotationScanner extends MethodVisitor {
+        void addMethod(String methodName, String signature) {
+            descriptors.add(methodName + signature);
+        }
 
-        private static final String REMOVED_ANNOTATION_DESCRIPTOR = "L" + Removed.class.getCanonicalName().replaceAll("\\.", "/") + ";";
+        boolean contains(String methodName, String signature) {
+            return descriptors.contains(methodName + signature);
+        }
+    }
 
-        private String signature;
-        List<String> deprecatedSignatures = new LinkedList<>();
-        String className;
+    private static class MethodsWithRemovedAnnotationCollector extends MethodVisitor {
 
-        public MethodAnnotationScanner() {
+        private static final String REMOVED_ANNOTATION_DESCRIPTOR = Type.getDescriptor(Removed.class);
+        private final MethodDescriptors descriptors = new MethodDescriptors();
+        private String currentMethod;
+        private String currentSignature;
+
+        public MethodsWithRemovedAnnotationCollector() {
             super(AsmConstants.ASM_LEVEL);
         }
 
         @Override
         public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
             if (descriptor.equals(REMOVED_ANNOTATION_DESCRIPTOR)) {
-                deprecatedSignatures.add(signature);
+                descriptors.addMethod(currentMethod, currentSignature);
             }
             return super.visitAnnotation(descriptor, visible);
         }
 
-        public void setSignature(String signature) {
-            this.signature = signature;
+        public void setCurrentMethod(String methodName, String signature) {
+            this.currentMethod = methodName;
+            this.currentSignature = signature;
         }
 
-        public void setClassName(String className) {
-            this.className = className;
+        public MethodDescriptors getMethodsWithRemovedAnnotation() {
+            return descriptors;
         }
     }
 
     private static class RemovedMethodsCollector extends ClassVisitor {
 
-        MethodAnnotationScanner scanner = new MethodAnnotationScanner();
-        private final String className;
+        MethodsWithRemovedAnnotationCollector collector = new MethodsWithRemovedAnnotationCollector();
 
-        public RemovedMethodsCollector(ClassVisitor classVisitor,String className) {
+        public RemovedMethodsCollector(ClassVisitor classVisitor) {
             super(AsmConstants.ASM_LEVEL, classVisitor);
-            this.className = className;
         }
 
         @Override
         public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-            scanner.setClassName(className);
-            scanner.setSignature(name + descriptor);
-            return scanner;
+            collector.setCurrentMethod(name, signature);
+            return collector;
         }
     }
 
     private static class RemovedClassCleaner extends ClassVisitor {
 
-        private HashSet<String> deprecatedSignatures;
+        private final MethodDescriptors methodsWithRemovedAnnotation;
 
-        public RemovedClassCleaner(ClassVisitor classVisitor, List<String> deprecatedSignatures) {
+        public RemovedClassCleaner(ClassVisitor classVisitor, MethodDescriptors methodsWithRemovedAnnotation) {
             super(AsmConstants.ASM_LEVEL, classVisitor);
-            this.deprecatedSignatures = new HashSet<String>(deprecatedSignatures);
+            this.methodsWithRemovedAnnotation = methodsWithRemovedAnnotation;
         }
 
         @Override
         public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-            if (deprecatedSignatures.contains(name + descriptor)) {
-                return null;
+            if (methodsWithRemovedAnnotation.contains(name, descriptor)) {
+                return null; // deletes the method from the class
             }
             return super.visitMethod(access, name, descriptor, signature, exceptions);
         }
