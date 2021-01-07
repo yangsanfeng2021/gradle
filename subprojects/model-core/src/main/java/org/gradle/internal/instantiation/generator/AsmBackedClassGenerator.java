@@ -1853,7 +1853,6 @@ public class AsmBackedClassGenerator extends AbstractClassGenerator {
             // <method>.getGenericReturnType()
             mv.visitMethodInsn(INVOKEVIRTUAL, METHOD_TYPE.getInternalName(), "getGenericReturnType", Type.getMethodDescriptor(JAVA_LANG_REFLECT_TYPE), false);
             mv.visitFieldInsn(PUTSTATIC, generatedType.getInternalName(), returnType.fieldName, JAVA_REFLECT_TYPE_DESCRIPTOR);
-
         }
 
         private final static class ReturnTypeEntry {

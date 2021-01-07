@@ -15,4 +15,8 @@ dependencies {
     runtime(project(":kotlin-dsl")) {
         because("Adds support for Kotlin DSL scripts.")
     }
+
+    runtime(project(":backwards-compatibility")) {
+        because("Adds backwards compatibility to classes")
+    }
 }

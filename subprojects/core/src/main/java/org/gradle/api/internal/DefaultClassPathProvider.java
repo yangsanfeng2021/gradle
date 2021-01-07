@@ -27,6 +27,7 @@ public class DefaultClassPathProvider implements ClassPathProvider {
 
     @Override
     public ClassPath findClassPath(String name) {
+
         if (name.equals("GRADLE_RUNTIME")) {
             return moduleRegistry.getModule("gradle-launcher").getAllRequiredModulesClasspath();
         }
@@ -67,6 +68,13 @@ public class DefaultClassPathProvider implements ClassPathProvider {
             ClassPath classpath = ClassPath.EMPTY;
             classpath = classpath.plus(moduleRegistry.getExternalModule("ant").getClasspath());
             classpath = classpath.plus(moduleRegistry.getExternalModule("ant-launcher").getClasspath());
+            return classpath;
+        }
+        if (name.equals("ASM-AND-GUAVA")) {
+            ClassPath classpath = ClassPath.EMPTY;
+            classpath = classpath.plus(moduleRegistry.getExternalModule("asm").getClasspath());
+            classpath = classpath.plus(moduleRegistry.getExternalModule("guava").getClasspath());
+            classpath = classpath.plus(moduleRegistry.getExternalModule("gradle-backwards-compatibility").getClasspath());
             return classpath;
         }
 

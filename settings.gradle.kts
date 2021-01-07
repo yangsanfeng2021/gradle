@@ -121,6 +121,7 @@ include("security")
 include("normalization-java")
 include("enterprise")
 include("build-operations")
+include("backwards-compatibility")
 
 // Plugin portal projects
 include("kotlin-dsl-plugins")
