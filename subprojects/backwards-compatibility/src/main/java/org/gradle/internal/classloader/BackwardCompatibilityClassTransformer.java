@@ -73,6 +73,8 @@ public class BackwardCompatibilityClassTransformer {
 
         private void addBridgeMethods() {
             for (RemovedMethodInfo removedMethod : Collections.unmodifiableList(removedMethods)) {
+                // TODO (donat) consider injecting a call to the deprecation logger here
+
                 Type[] argumentTypes = removedMethod.getMethodType().getArgumentTypes();
                 Type returnType = removedMethod.getMethodType().getReturnType();
                 MethodVisitor methodVisitor = cv.visitMethod(ACC_PUBLIC, removedMethod.getOriginalName(), removedMethod.getRemovedMethodDescriptor(), null, null);

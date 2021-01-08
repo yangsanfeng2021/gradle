@@ -112,7 +112,8 @@ public class AntAndGradleClassloader extends VisitableURLClassLoader {
     }
 
     protected boolean shouldTransform(String className) {
-        return className.contains("org.gradle.api.tasks.bundling.Tar");
+        //return className.contains("org.gradle.api.tasks.bundling.Tar") || className.contains("org.gradle.api.tasks.bundling.AbstractArchiveTask");
+        return true;
     }
 
     @Override

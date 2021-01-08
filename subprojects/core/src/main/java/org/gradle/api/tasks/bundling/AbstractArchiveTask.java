@@ -23,6 +23,7 @@ import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.internal.file.copy.CopyActionExecuter;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.model.Removed;
 import org.gradle.api.model.ReplacedBy;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -97,29 +98,16 @@ public abstract class AbstractArchiveTask extends AbstractCopyTask {
         return "";
     }
 
-    /**
-     * Returns the archive name. If the name has not been explicitly set, the pattern for the name is:
-     * <code>[archiveBaseName]-[archiveAppendix]-[archiveVersion]-[archiveClassifier].[archiveExtension]</code>
-     *
-     * @return the archive name.
-     * @deprecated Use {@link #getArchiveFileName()}
-     */
-    @Deprecated
+    @Removed(version = "7.0", original = "getArchiveName")
     @ReplacedBy("archiveFileName")
-    public String getArchiveName() {
+    private String oldGetArchiveName() {
         // This is used by the Kotlin plugin, we should upstream a fix to avoid this API first.
         // DeprecationLogger.deprecateProperty("archiveName").replaceWith("archiveFileName").willBeRemovedInNextMajorVersion().withDslReference(AbstractArchiveTask.class).nagUser();
         return archiveName.get();
     }
 
-    /**
-     * Sets the archive name.
-     *
-     * @param name the archive name.
-     * @deprecated Use {@link #getArchiveFileName()}
-     */
-    @Deprecated
-    public void setArchiveName(String name) {
+    @Removed(version = "7.0", original = "setArchiveName")
+    private void oldSetArchiveName(String name) {
         DeprecationLogger.deprecateProperty(AbstractArchiveTask.class, "archiveName").replaceWith("archiveFileName")
             .willBeRemovedInGradle7()
             .withDslReference()
