@@ -9,3 +9,19 @@ plugins {
     id("gradlebuild.wrapper")                    // Local development: Convenience tasks to update the wrapper (like 'nightlyWrapper')
     id("gradlebuild.quick-check")                // Local development: Convenience task `quickCheck` for running checkstyle/codenarc only on changed files before commit
 }
+
+if (gradle.startParameter.projectProperties.keys.any {
+    key -> key.contains("token", true)
+        || key.contains("password", true)
+        || key.contains("secret", true)
+}) {
+    throw GradleException("Possible credentials leak in project properties from CLI")
+}
+
+if (gradle.startParameter.systemPropertiesArgs.keys.any {
+            key -> key.contains("token", true)
+                || key.contains("password", true)
+                || key.contains("secret", true)
+        }) {
+    throw GradleException("Possible credentials leak in system properties from CLI")
+}
