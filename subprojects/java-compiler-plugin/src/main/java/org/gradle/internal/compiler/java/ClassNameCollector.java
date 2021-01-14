@@ -17,9 +17,9 @@ package org.gradle.internal.compiler.java;
 
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
-import com.sun.tools.javac.code.Symbol;
 
 import javax.lang.model.element.Name;
+import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 import java.io.File;
@@ -71,11 +71,7 @@ public class ClassNameCollector implements TaskListener {
             String key = relativePath.get();
             TypeElement typeElement = e.getTypeElement();
             Name name = typeElement.getQualifiedName();
-            if (typeElement instanceof Symbol.TypeSymbol) {
-                Symbol.TypeSymbol symbol = (Symbol.TypeSymbol) typeElement;
-                name = symbol.flatName();
-            }
-            String symbol = normalizeName(name);
+            String symbol = normalizeName(name, typeElement.getNestingKind());
             registerMapping(key, symbol);
         }
     }
@@ -93,10 +89,16 @@ public class ClassNameCollector implements TaskListener {
         return relativePaths.computeIfAbsent(asSourceFile, relativize);
     }
 
-    private static String normalizeName(Name name) {
+    private static String normalizeName(Name name, NestingKind nestingKind) {
         String symbol = name.toString();
         if (symbol.endsWith("module-info")) {
             symbol = "module-info";
+        }
+        if(nestingKind == NestingKind.MEMBER) {
+            int classSeparator = symbol.lastIndexOf(".");
+            if(classSeparator != -1) {
+                return symbol.substring(0, classSeparator) + "$" + symbol.substring(classSeparator + 1);
+            }
         }
         return symbol;
     }
