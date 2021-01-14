@@ -258,4 +258,36 @@ class MissingTaskDependenciesIntegrationTest extends AbstractIntegrationSpec {
         then:
         executedAndNotSkipped(":firstTask", ":packageProjectDir", ":lastTask")
     }
+
+    def "detects filtered trees with missing dependencies"() {
+        file("src/main/java/MyClass.java").createFile()
+        buildFile << """
+            task firstTask {
+                def outputFile = file("build/output1.txt")
+                outputs.file(outputFile)
+                doLast {
+                    outputFile.text = "first"
+                }
+            }
+            task lastTask {
+                def outputFile = file("build/output2.txt")
+                outputs.file(outputFile)
+                doLast {
+                    outputFile.text = "last"
+                }
+            }
+            task packageProjectDir(type: Zip) {
+                from(project.projectDir) {
+                    include 'build/**'
+                }
+                destinationDirectory = file("build")
+                archiveBaseName = "output3"
+            }
+        """
+
+        when:
+        run("firstTask", "packageProjectDir", "lastTask")
+        then:
+        executedAndNotSkipped(":firstTask", ":packageProjectDir", ":lastTask")
+    }
 }
