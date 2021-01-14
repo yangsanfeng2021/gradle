@@ -33,6 +33,7 @@ import java.io.File;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class LocalTaskNodeExecutor implements NodeExecutor {
@@ -78,6 +79,7 @@ public class LocalTaskNodeExecutor implements NodeExecutor {
                 .forEach(consumerWithoutDependency -> collectValidationProblem(node, consumerWithoutDependency, validationContext));
         }
         Set<String> locationsConsumedByThisTask = new LinkedHashSet<>();
+        Set<FilteredTree> filteredFileTreesConsumedByThisTask = new LinkedHashSet<>();
         node.getTaskProperties().getInputFileProperties()
             .forEach(spec -> spec.getPropertyFiles().visitStructure(new FileCollectionStructureVisitor() {
                 @Override
@@ -92,7 +94,11 @@ public class LocalTaskNodeExecutor implements NodeExecutor {
 
                 @Override
                 public void visitFileTree(File root, PatternSet patterns, FileTreeInternal fileTree) {
-                    locationsConsumedByThisTask.add(root.getAbsolutePath());
+                    if (patterns.isEmpty()) {
+                        locationsConsumedByThisTask.add(root.getAbsolutePath());
+                    } else {
+                        filteredFileTreesConsumedByThisTask.add(new FilteredTree(root.getAbsolutePath(), patterns));
+                    }
                 }
 
                 @Override
@@ -104,6 +110,11 @@ public class LocalTaskNodeExecutor implements NodeExecutor {
         for (String locationConsumedByThisTask : locationsConsumedByThisTask) {
             producedLocations.getNodesRelatedTo(locationConsumedByThisTask).stream()
                 .filter(producerNode -> hasNoSpecifiedOrder(producerNode, node))
+                .forEach(producerWithoutDependency -> collectValidationProblem(producerWithoutDependency, node, validationContext));
+        }
+        for (FilteredTree filteredFileTreeConsumedByThisTask : filteredFileTreesConsumedByThisTask) {
+            producedLocations.getNodesRelatedTo(filteredFileTreeConsumedByThisTask.getRoot(), filteredFileTreeConsumedByThisTask.getPatterns().getAsSpec()).stream()
+                .filter(producerNode -> missesDependency(producerNode, node))
                 .forEach(producerWithoutDependency -> collectValidationProblem(producerWithoutDependency, node, validationContext));
         }
     }
@@ -151,5 +162,41 @@ public class LocalTaskNodeExecutor implements NodeExecutor {
             severity,
             String.format("Task '%s' uses the output of task '%s', without declaring an explicit dependency (using dependsOn or mustRunAfter) or an implicit dependency (declaring task '%s' as an input). This can lead to incorrect results being produced, depending on what order the tasks are executed", consumer, producer, producer)
         );
+    }
+
+    private static class FilteredTree {
+        private final String root;
+        private final PatternSet patterns;
+
+        private FilteredTree(String root, PatternSet patterns) {
+            this.root = root;
+            this.patterns = patterns;
+        }
+
+        public String getRoot() {
+            return root;
+        }
+
+        public PatternSet getPatterns() {
+            return patterns;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            FilteredTree that = (FilteredTree) o;
+            return root.equals(that.root) && patterns.equals(that.patterns);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(root, patterns);
+        }
+
     }
 }
