@@ -108,7 +108,7 @@ public class LocalTaskNodeExecutor implements NodeExecutor {
                     locationsConsumedByThisTask.add(file.getAbsolutePath());
                 }
             }));
-        consumedLocations.recordRelatedToNode(node, locationsConsumedByThisTask);
+        consumedLocations.recordRelatedToNode(locationsConsumedByThisTask, node);
         for (String locationConsumedByThisTask : locationsConsumedByThisTask) {
             producedLocations.getNodesRelatedTo(locationConsumedByThisTask).stream()
                 .filter(producerNode -> hasNoSpecifiedOrder(producerNode, node))
@@ -116,7 +116,7 @@ public class LocalTaskNodeExecutor implements NodeExecutor {
         }
         for (FilteredTree filteredFileTreeConsumedByThisTask : filteredFileTreesConsumedByThisTask) {
             Spec<FileTreeElement> spec = filteredFileTreeConsumedByThisTask.getPatterns().getAsSpec();
-            consumedLocations.recordFileTreeRelatedToNode(node, filteredFileTreeConsumedByThisTask.getRoot(), spec);
+            consumedLocations.recordFileTreeRelatedToNode(filteredFileTreeConsumedByThisTask.getRoot(), node, spec);
             producedLocations.getNodesRelatedTo(filteredFileTreeConsumedByThisTask.getRoot(), spec).stream()
                 .filter(producerNode -> missesDependency(producerNode, node))
                 .forEach(producerWithoutDependency -> collectValidationProblem(producerWithoutDependency, node, validationContext));

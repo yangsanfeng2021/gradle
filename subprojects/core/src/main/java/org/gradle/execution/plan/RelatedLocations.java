@@ -104,16 +104,16 @@ public class RelatedLocations {
         void visitChildren(Iterable<Node> nodes, Supplier<String> relativePathSupplier);
     }
 
-    public synchronized void recordRelatedToNode(Node node, Iterable<String> locationsRelatedToNode) {
+    public synchronized void recordRelatedToNode(Iterable<String> locationsRelatedToNode, Node node) {
         for (String location : locationsRelatedToNode) {
             VfsRelativePath relativePath = VfsRelativePath.of(location);
-            root = root.recordRelatedToNode(relativePath, node);
+            root = root.recordRelatedToNode(relativePath, new DefaultRelatedNode(node));
         }
     }
 
-    public synchronized void recordFileTreeRelatedToNode(Node node, String locationRelatedToNode, Spec<FileTreeElement> spec) {
+    public synchronized void recordFileTreeRelatedToNode(String locationRelatedToNode, Node node, Spec<FileTreeElement> spec) {
         VfsRelativePath relativePath = VfsRelativePath.of(locationRelatedToNode);
-        root = root.recordRelatedToNode(node, relativePath, spec);
+        root = root.recordRelatedToNode(relativePath, new FilteredRelatedNode(node, spec));
     }
 
     public synchronized void clear() {
@@ -160,22 +160,7 @@ public class RelatedLocations {
 
                 @Override
                 public String handleExactMatchWithChild(RelatedLocation child) {
-                    child.visitNodes(new NodeVisitor() {
-                        @Override
-                        public void visitExact(Node node) {
-                            visitor.visitExact(node);
-                        }
-
-                        @Override
-                        public void visitAncestor(Node node) {
-                            throw new IllegalArgumentException("Cannot visit parents any more");
-                        }
-
-                        @Override
-                        public void visitChildren(Iterable<Node> nodes, Supplier<String> relativePathSupplier) {
-                            visitor.visitChildren(nodes, relativePathSupplier);
-                        }
-                    });
+                    child.visitNodes(visitor);
                     return "";
                 }
 
@@ -201,13 +186,13 @@ public class RelatedLocations {
             });
         }
 
-        public RelatedLocation recordRelatedToNode(VfsRelativePath locationRelatedToNode, Node node) {
+        public RelatedLocation recordRelatedToNode(VfsRelativePath locationRelatedToNode, RelatedNode node) {
             if (locationRelatedToNode.length() == 0) {
                 return new RelatedLocation(
                     children,
                     ImmutableList.<RelatedNode>builderWithExpectedSize(relatedNodes.size() + 1)
                         .addAll(relatedNodes)
-                        .add(new DefaultRelatedNode(node))
+                        .add(node)
                         .build(),
                     caseSensitivity
                 );
@@ -221,58 +206,17 @@ public class RelatedLocations {
                 @Override
                 public RelatedLocation handleAsAncestorOfChild(String childPath, RelatedLocation child) {
                     ChildMap<RelatedLocation> singletonChild = ChildMapFactory.childMapFromSorted(ImmutableList.of(new ChildMap.Entry<>(VfsRelativePath.of(childPath).suffixStartingFrom(locationRelatedToNode.length() + 1).getAsString(), child)));
-                    return new RelatedLocation(singletonChild, ImmutableList.of(new DefaultRelatedNode(node)), caseSensitivity);
+                    return new RelatedLocation(singletonChild, ImmutableList.of(node), caseSensitivity);
                 }
 
                 @Override
                 public RelatedLocation mergeWithExisting(RelatedLocation child) {
-                    return new RelatedLocation(child.getChildren(), ImmutableList.<RelatedNode>builderWithExpectedSize(child.getNodes().size() + 1).addAll(child.getNodes()).add(new DefaultRelatedNode(node)).build(), caseSensitivity);
+                    return new RelatedLocation(child.getChildren(), ImmutableList.<RelatedNode>builderWithExpectedSize(child.getNodes().size() + 1).addAll(child.getNodes()).add(node).build(), caseSensitivity);
                 }
 
                 @Override
                 public RelatedLocation createChild() {
-                    return new RelatedLocation(EmptyChildMap.getInstance(), ImmutableList.of(new DefaultRelatedNode(node)), caseSensitivity);
-                }
-
-                @Override
-                public RelatedLocation createNodeFromChildren(ChildMap<RelatedLocation> children) {
-                    return new RelatedLocation(children, ImmutableList.of(), caseSensitivity);
-                }
-            });
-            return new RelatedLocation(newChildren, ImmutableList.of(), caseSensitivity);
-        }
-
-        public RelatedLocation recordRelatedToNode(Node node, VfsRelativePath locationRelatedToNode, Spec<FileTreeElement> spec) {
-            if (locationRelatedToNode.length() == 0) {
-                return new RelatedLocation(
-                    children,
-                    ImmutableList.<RelatedNode>builderWithExpectedSize(relatedNodes.size() + 1)
-                        .addAll(relatedNodes)
-                        .add(new FilteredRelatedNode(node, spec))
-                        .build(),
-                    caseSensitivity
-                );
-            }
-            ChildMap<RelatedLocation> newChildren = children.store(locationRelatedToNode, caseSensitivity, new ChildMap.StoreHandler<RelatedLocation>() {
-                @Override
-                public RelatedLocation handleAsDescendantOfChild(VfsRelativePath pathInChild, RelatedLocation child) {
-                    return child.recordRelatedToNode(pathInChild, node);
-                }
-
-                @Override
-                public RelatedLocation handleAsAncestorOfChild(String childPath, RelatedLocation child) {
-                    ChildMap<RelatedLocation> singletonChild = ChildMapFactory.childMapFromSorted(ImmutableList.of(new ChildMap.Entry<>(VfsRelativePath.of(childPath).suffixStartingFrom(locationRelatedToNode.length() + 1).getAsString(), child)));
-                    return new RelatedLocation(singletonChild, ImmutableList.of(new FilteredRelatedNode(node, spec)), caseSensitivity);
-                }
-
-                @Override
-                public RelatedLocation mergeWithExisting(RelatedLocation child) {
-                    return new RelatedLocation(child.getChildren(), ImmutableList.<RelatedNode>builderWithExpectedSize(child.getNodes().size() + 1).addAll(child.getNodes()).add(new FilteredRelatedNode(node, spec)).build(), caseSensitivity);
-                }
-
-                @Override
-                public RelatedLocation createChild() {
-                    return new RelatedLocation(EmptyChildMap.getInstance(), ImmutableList.of(new FilteredRelatedNode(node, spec)), caseSensitivity);
+                    return new RelatedLocation(EmptyChildMap.getInstance(), ImmutableList.of(node), caseSensitivity);
                 }
 
                 @Override

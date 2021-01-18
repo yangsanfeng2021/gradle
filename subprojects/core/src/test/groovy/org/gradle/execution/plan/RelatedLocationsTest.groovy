@@ -26,9 +26,9 @@ class RelatedLocationsTest extends Specification {
         def node1 = Mock(Node)
         def node2 = Mock(Node)
         def node3 = Mock(Node)
-        locations.recordRelatedToNode(node1, ["/some/location"])
-        locations.recordRelatedToNode(node2, ["/some/other/location"])
-        locations.recordRelatedToNode(node3, ["/some/other/third"])
+        locations.recordRelatedToNode(["/some/location"], node1)
+        locations.recordRelatedToNode(["/some/other/location"], node2)
+        locations.recordRelatedToNode(["/some/other/third"], node3)
 
         expect:
         assertNodesRelated("/some", node1, node2, node3)
@@ -41,8 +41,8 @@ class RelatedLocationsTest extends Specification {
     def "ancestor is related to location"() {
         def node1 = Mock(Node)
         def node2 = Mock(Node)
-        locations.recordRelatedToNode(node1, ["/some/location"])
-        locations.recordRelatedToNode(node2, ["/some/location/within/deep"])
+        locations.recordRelatedToNode(["/some/location"], node1)
+        locations.recordRelatedToNode(["/some/location/within/deep"], node2)
 
         expect:
         assertNodesRelated("/some/location/within", node2)
