@@ -41,11 +41,13 @@ import java.util.stream.Collectors;
 
 public class RelatedLocations {
     private volatile RelatedLocation root;
+    private final Stat stat;
     private final CaseSensitivity caseSensitivity;
 
-    public RelatedLocations(CaseSensitivity caseSensitivity) {
+    public RelatedLocations(CaseSensitivity caseSensitivity, Stat stat) {
         this.caseSensitivity = caseSensitivity;
         this.root = new RelatedLocation(EmptyChildMap.getInstance(), ImmutableList.of(), caseSensitivity);
+        this.stat = stat;
     }
 
     public ImmutableSet<Node> getNodesRelatedTo(String location) {
@@ -85,7 +87,7 @@ public class RelatedLocations {
             @Override
             public void visitChildren(Iterable<Node> nodes, Supplier<String> relativePathSupplier) {
                 String relativePathFromLocation = relativePathSupplier.get();
-                if (filter.isSatisfiedBy(new LocationFileTreeElement(new File(location + "/" + relativePathFromLocation).getAbsolutePath(), relativePathFromLocation, null))) {
+                if (filter.isSatisfiedBy(new LocationFileTreeElement(new File(location + "/" + relativePathFromLocation).getAbsolutePath(), relativePathFromLocation, stat))) {
                     builder.addAll(nodes);
                 }
             }
@@ -256,7 +258,7 @@ public class RelatedLocations {
         }
     }
 
-    private static class FilteredRelatedNode implements RelatedNode {
+    private class FilteredRelatedNode implements RelatedNode {
         private final Node node;
         private final Spec<FileTreeElement> spec;
 
@@ -272,7 +274,7 @@ public class RelatedLocations {
 
         @Override
         public boolean relatedToLocation(VfsRelativePath relativePath) {
-            return spec.isSatisfiedBy(new LocationFileTreeElement(relativePath.getAbsolutePath(), relativePath.getAsString(), null));
+            return spec.isSatisfiedBy(new LocationFileTreeElement(relativePath.getAbsolutePath(), relativePath.getAsString(), stat));
         }
     }
 

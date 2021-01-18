@@ -16,11 +16,12 @@
 
 package org.gradle.execution.plan
 
+import org.gradle.internal.file.Stat
 import org.gradle.internal.snapshot.CaseSensitivity
 import spock.lang.Specification
 
 class RelatedLocationsTest extends Specification {
-    def locations = new RelatedLocations(CaseSensitivity.CASE_SENSITIVE)
+    def locations = new RelatedLocations(CaseSensitivity.CASE_SENSITIVE, Stub(Stat))
 
     def "parent is related to location"() {
         def node1 = Mock(Node)
