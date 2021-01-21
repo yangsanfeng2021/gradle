@@ -126,6 +126,7 @@ public class NodeState implements DependencyGraphNode {
     private StrictVersionConstraints ownStrictVersionConstraints;
     private List<EdgeState> endorsesStrictVersionsFrom;
     private boolean removingOutgoingEdges;
+    private boolean findingExternalVariants;
 
     public NodeState(Long resultId, ResolvedConfigurationIdentifier id, ComponentState component, ResolveState resolveState, ConfigurationMetadata md) {
         this.resultId = resultId;
@@ -1253,20 +1254,58 @@ public class NodeState implements DependencyGraphNode {
         return cachedVariantResult;
     }
 
+    @Nullable
     private ResolvedVariantResult findExternalVariant() {
         if (canIgnoreExternalVariant()) {
             return null;
         }
+        if (findingExternalVariants) {
+            // There is a cycle in the external variants
+            LOGGER.warn("Detecting cycle in external variants for " + computePathToRoot());
+            findingExternalVariants = false;
+            return null;
+        }
+        findingExternalVariants = true;
         // An external variant must have exactly one outgoing edge
         // corresponding to the dependency to the external module
         // can be 0 if the selected variant also happens to be excluded
         // for example via configuration excludes
         assert outgoingEdges.size() <= 1;
-        for (EdgeState outgoingEdge : outgoingEdges) {
-            //noinspection ConstantConditions
-            return outgoingEdge.getSelectedVariant();
+        try {
+            for (EdgeState outgoingEdge : outgoingEdges) {
+                //noinspection ConstantConditions
+                return outgoingEdge.getSelectedVariant();
+            }
+            return null;
+        } finally {
+            findingExternalVariants = false;
         }
-        return null;
+    }
+
+    private String computePathToRoot() {
+        StringBuilder builder = new StringBuilder(getSimpleName()).append("\n");
+        NodeState from = this;
+        int depth = 1;
+        do {
+            from = getFromNode(from);
+            if (from != null) {
+                for (int i = 0; i < depth; i++) {
+                    builder.append("\t");
+                }
+                builder.append("\\___").append(getSimpleName()).append("\n");
+            }
+            depth++;
+        } while (from != null && !(from instanceof RootNode));
+        return builder.toString();
+    }
+
+    @Nullable
+    private NodeState getFromNode(NodeState from) {
+        List<EdgeState> incomingEdges = from.getIncomingEdges();
+        if (incomingEdges.isEmpty()) {
+            return null;
+        }
+        return incomingEdges.get(0).getFrom();
     }
 
     public void updateTransitiveExcludes() {
