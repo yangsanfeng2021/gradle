@@ -24,7 +24,7 @@ class RootProject(model: CIBuildModel, functionalTestBucketProvider: FunctionalT
             id = "PROJECT_EXT_3"
             mode = VersionedSettings.Mode.ENABLED
             buildSettingsMode = VersionedSettings.BuildSettingsMode.PREFER_SETTINGS_FROM_VCS
-            rootExtId = "Gradle_Branches_VersionedSettings"
+            rootExtId = "Gradle_Gradle6xRelease"
             showChanges = true
             settingsFormat = VersionedSettings.Format.KOTLIN
             param("credentialsStorageType", "credentialsJSON")
