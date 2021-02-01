@@ -48,7 +48,7 @@ fun BuildFeatures.publishBuildStatusToGithub(model: CIBuildModel) {
 
 fun BuildFeatures.triggeredOnPullRequests() {
     pullRequests {
-        vcsRootExtId = "Gradle_Branches_GradlePersonalBranches"
+        vcsRootExtId = "GradleBuildToolMaster"
         provider = github {
             authType = token {
                 token = "%github.bot-gradle.token%"
@@ -61,7 +61,7 @@ fun BuildFeatures.triggeredOnPullRequests() {
 
 fun BuildFeatures.publishBuildStatusToGithub() {
     commitStatusPublisher {
-        vcsRootExtId = "Gradle_Branches_GradlePersonalBranches"
+        vcsRootExtId = "GradleBuildToolMaster"
         publisher = github {
             githubUrl = "https://api.github.com"
             authType = personalToken {
