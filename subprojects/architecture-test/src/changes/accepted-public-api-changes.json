@@ -1640,14 +1640,6 @@
             "changes": [
                 "Method has been removed"
             ]
-        },
-        {
-            "type": "org.gradle.api.AntBuilder",
-            "member": "Class org.gradle.api.AntBuilder",
-            "acceptation": "Moved to new Groovy version",
-            "changes": [
-                "Abstract method has been added in implemented interface"
-            ]
         }
     ]
 }
