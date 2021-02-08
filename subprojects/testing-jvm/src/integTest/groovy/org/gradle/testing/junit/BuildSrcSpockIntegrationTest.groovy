@@ -37,10 +37,9 @@ repositories {
 
 dependencies {
     implementation gradleApi()
-    implementation localGroovy()
 
     testImplementation '$dependencyNotation',
-        'org.spockframework:spock-core:1.0-groovy-2.4@jar',
+        'org.spockframework:spock-core:2.0-M4-groovy-3.0@jar',
         'cglib:cglib:3.2.6',
         'org.objenesis:objenesis:1.2'
 }
@@ -93,7 +92,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation localGroovy()
+    testImplementation 'org.codehaus.groovy:groovy:2.5.12'
     testImplementation '$dependencyNotation', 'org.spockframework:spock-core:1.0-groovy-2.4@jar'
 }
 """
