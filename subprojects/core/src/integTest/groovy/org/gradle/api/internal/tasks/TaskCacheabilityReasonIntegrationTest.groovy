@@ -34,12 +34,13 @@ import static org.gradle.api.internal.tasks.TaskOutputCachingDisabledReasonCateg
 import static org.gradle.api.internal.tasks.TaskOutputCachingDisabledReasonCategory.NO_OUTPUTS_DECLARED
 import static org.gradle.api.internal.tasks.TaskOutputCachingDisabledReasonCategory.OVERLAPPING_OUTPUTS
 import static org.gradle.api.internal.tasks.TaskOutputCachingDisabledReasonCategory.UNKNOWN
+import static org.gradle.api.internal.tasks.TaskOutputCachingDisabledReasonCategory.VALIDATION_FAILURE
 
 class TaskCacheabilityReasonIntegrationTest extends AbstractIntegrationSpec implements DirectoryBuildCacheFixture {
     def operations = new BuildOperationsFixture(executer, testDirectoryProvider)
 
     def setup() {
-        buildFile << """
+        buildFile """
             import org.gradle.api.internal.tasks.TaskOutputCachingDisabledReasonCategory
 
             class NotCacheable extends DefaultTask {
@@ -108,7 +109,7 @@ class TaskCacheabilityReasonIntegrationTest extends AbstractIntegrationSpec impl
     }
 
     def "cacheability for a cacheable task with no outputs is NO_OUTPUTS_DECLARED"() {
-        buildFile << """
+        buildFile """
             @CacheableTask
             class CacheableNoOutputs extends DefaultTask {
                 @TaskAction
@@ -124,7 +125,7 @@ class TaskCacheabilityReasonIntegrationTest extends AbstractIntegrationSpec impl
     }
 
     def "cacheability for a non-cacheable task with no outputs is NOT_ENABLED_FOR_TASK"() {
-        buildFile << """
+        buildFile """
             task noOutputs(type: NoOutputs) {}
         """
         when:
@@ -181,7 +182,7 @@ class TaskCacheabilityReasonIntegrationTest extends AbstractIntegrationSpec impl
     }
 
     def "cacheability for a task with overlapping outputs is OVERLAPPING_OUTPUTS"() {
-        buildFile << """
+        buildFile """
             task cacheable(type: Cacheable)
             task cacheableWithOverlap(type: Cacheable) {
                 outputFile = cacheable.outputFile
@@ -195,7 +196,7 @@ class TaskCacheabilityReasonIntegrationTest extends AbstractIntegrationSpec impl
     }
 
     def "cacheability for a task with a cacheIf is CACHE_IF_SPEC_NOT_SATISFIED"() {
-        buildFile << """
+        buildFile """
             task cacheable(type: Cacheable) {
                 outputs.cacheIf("always false") { false }
             }
@@ -207,7 +208,7 @@ class TaskCacheabilityReasonIntegrationTest extends AbstractIntegrationSpec impl
     }
 
     def "cacheability for a task with a doNotCacheIf is DO_NOT_CACHE_IF_SPEC_SATISFIED"() {
-        buildFile << """
+        buildFile """
             task cacheable(type: Cacheable) {
                 outputs.doNotCacheIf("always true") { true }
             }
@@ -219,7 +220,7 @@ class TaskCacheabilityReasonIntegrationTest extends AbstractIntegrationSpec impl
     }
 
     def "cacheability for a task with onlyIf is UNKNOWN"() {
-        buildFile << """
+        buildFile """
             task cacheable(type: Cacheable) {
                 onlyIf { false }
             }
@@ -231,7 +232,7 @@ class TaskCacheabilityReasonIntegrationTest extends AbstractIntegrationSpec impl
     }
 
     def "cacheability for a task with no sources is UNKNOWN"() {
-        buildFile << """
+        buildFile """
             @CacheableTask
             class NoSources extends NotCacheable {
                 @InputFiles
@@ -248,7 +249,7 @@ class TaskCacheabilityReasonIntegrationTest extends AbstractIntegrationSpec impl
     }
 
     def "cacheability for a cacheable task that's up-to-date"() {
-        buildFile << """
+        buildFile """
             task cacheable(type: Cacheable)
         """
         when:
@@ -265,7 +266,7 @@ class TaskCacheabilityReasonIntegrationTest extends AbstractIntegrationSpec impl
     }
 
     def "cacheability for a non-cacheable task that's up-to-date"() {
-        buildFile << """
+        buildFile """
             task notcacheable(type: NotCacheable)
         """
         when:
@@ -282,7 +283,7 @@ class TaskCacheabilityReasonIntegrationTest extends AbstractIntegrationSpec impl
     }
 
     def "cacheability for a failing cacheable task is null"() {
-        buildFile << """
+        buildFile """
             task cacheable(type: Cacheable) {
                 doLast {
                     throw new GradleException("boom")
@@ -297,7 +298,7 @@ class TaskCacheabilityReasonIntegrationTest extends AbstractIntegrationSpec impl
     }
 
     def "cacheability for a failing non-cacheable task is NOT_ENABLED_FOR_TASK"() {
-        buildFile << """
+        buildFile """
             task cacheable(type: NotCacheable) {
                 doLast {
                     throw new GradleException("boom")
@@ -309,6 +310,36 @@ class TaskCacheabilityReasonIntegrationTest extends AbstractIntegrationSpec impl
         failure.assertHasCause("boom")
         then:
         assertCachingDisabledFor NOT_ENABLED_FOR_TASK, "Caching has not been enabled for the task"
+    }
+
+    def "cacheability for task with disabled optimizations is FAILED_VALIDATION"() {
+        when:
+        executer.noDeprecationChecks()
+        buildFile """
+            task producer {
+                def outputFile = file("out.txt")
+                outputs.file(outputFile)
+                doLast {
+                    outputFile.parentFile.mkdirs()
+                    outputFile.text = "produced"
+                }
+            }
+
+            task consumer {
+                def inputFile = file("out.txt")
+                def outputFile = file("consumerOutput.txt")
+                inputs.files(inputFile)
+                outputs.file(outputFile)
+                outputs.cacheIf { true }
+                doLast {
+                    outputFile.text = "consumed"
+                }
+            }
+        """
+
+        then:
+        withBuildCache().succeeds("producer", "consumer")
+        assertCachingDisabledFor VALIDATION_FAILURE, "Validation failed", ":consumer"
     }
 
     private void assertCachingDisabledFor(@Nullable TaskOutputCachingDisabledReasonCategory category, @Nullable String message, @Nullable String taskPath = null) {

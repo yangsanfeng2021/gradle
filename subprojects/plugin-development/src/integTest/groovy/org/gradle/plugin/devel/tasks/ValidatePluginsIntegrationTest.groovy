@@ -18,13 +18,13 @@ package org.gradle.plugin.devel.tasks
 
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.InputArtifactDependencies
-import org.gradle.integtests.fixtures.UnsupportedWithConfigurationCache
 import org.gradle.internal.reflect.TypeValidationContext
 import org.gradle.test.fixtures.file.TestFile
 import spock.lang.Unroll
 
 import static org.gradle.internal.reflect.TypeValidationContext.Severity.ERROR
 import static org.gradle.internal.reflect.TypeValidationContext.Severity.WARNING
+import static org.hamcrest.Matchers.containsString
 
 class ValidatePluginsIntegrationTest extends AbstractPluginValidationIntegrationSpec {
 
@@ -52,19 +52,14 @@ class ValidatePluginsIntegrationTest extends AbstractPluginValidationIntegration
     }
 
     @Override
-    void assertValidationFailsWith(Map<String, TypeValidationContext.Severity> messages) {
+    void assertValidationFailsWith(boolean expectDeprecationsForErrors, Map<String, TypeValidationContext.Severity> messages) {
         fails "validatePlugins"
+        def report = new TaskValidationReportFixture(file("build/reports/plugin-development/validation-report.txt"))
+        report.verify(messages)
 
-        def expectedReportContents = messages
-            .collect { message, severity ->
-                "$severity: $message"
-            }
-            .join("\n")
-        assert file("build/reports/plugin-development/validation-report.txt").text == expectedReportContents
-
-        failure.assertHasCause "Plugin validation failed"
+        failure.assertHasCause "Plugin validation failed with ${messages.size()} problem${messages.size()>1?'s':''}"
         messages.forEach { message, severity ->
-            failure.assertHasCause("$severity: $message")
+            failure.assertThatCause(containsString("$severity: $message"))
         }
     }
 
@@ -385,19 +380,6 @@ class ValidatePluginsIntegrationTest extends AbstractPluginValidationIntegration
             "Type 'MyTransformParameters': property 'inputFile' is annotated with invalid property type @InputArtifact.": ERROR,
             "Type 'MyTransformParameters': property 'oldThing' is not annotated with an input annotation.": ERROR,
         )
-    }
-
-    @UnsupportedWithConfigurationCache(because = "validateTaskProperties references validatePlugins")
-    def "can run old task"() {
-        executer.expectDocumentedDeprecationWarning("The validateTaskProperties task has been deprecated. This is scheduled to be removed in Gradle 7.0. " +
-            "Please use the validatePlugins task instead. " +
-            "Consult the upgrading guide for further information: https://docs.gradle.org/current/userguide/upgrading_version_5.html#plugin_validation_changes")
-
-        when:
-        run "validateTaskProperties"
-
-        then:
-        executedAndNotSkipped(":validatePlugins")
     }
 
     def "tests only classes from plugin source set"() {

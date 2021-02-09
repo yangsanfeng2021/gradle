@@ -19,8 +19,6 @@ package model
 import com.alibaba.fastjson.JSON
 import java.io.File
 
-val slowSubprojects = listOf("platform-play")
-
 val ignoredSubprojects = listOf(
     "soak", // soak test
     "distributions-integ-tests", // build distribution testing
@@ -31,7 +29,6 @@ interface GradleSubprojectProvider {
     val subprojects: List<GradleSubproject>
     fun getSubprojectsFor(testConfig: TestCoverage, stage: Stage): List<GradleSubproject>
     fun getSubprojectByName(name: String): GradleSubproject?
-    fun getSlowSubprojects(): List<GradleSubproject>
 }
 
 data class JsonBasedGradleSubprojectProvider(private val jsonFile: File) : GradleSubprojectProvider {
@@ -39,12 +36,10 @@ data class JsonBasedGradleSubprojectProvider(private val jsonFile: File) : Gradl
     private val nameToSubproject = subprojects.map { it.name to it }.toMap()
 
     override fun getSubprojectsFor(testConfig: TestCoverage, stage: Stage) =
-        subprojects.filterNot { it.containsSlowTests && stage.omitsSlowProjects }
-            .filter { it.hasTestsOf(testConfig.testType) }
+        subprojects.filter { it.hasTestsOf(testConfig.testType) }
             .filterNot { testConfig.os.ignoredSubprojects.contains(it.name) }
 
     override fun getSubprojectByName(name: String) = nameToSubproject[name]
-    override fun getSlowSubprojects() = subprojects.filter { it.containsSlowTests }
 
     private
     fun toSubproject(subproject: Map<String, Object>): GradleSubproject {
@@ -52,6 +47,6 @@ data class JsonBasedGradleSubprojectProvider(private val jsonFile: File) : Gradl
         val unitTests = !ignoredSubprojects.contains(name) && subproject["unitTests"] as Boolean
         val functionalTests = !ignoredSubprojects.contains(name) && subproject["functionalTests"] as Boolean
         val crossVersionTests = !ignoredSubprojects.contains(name) && subproject["crossVersionTests"] as Boolean
-        return GradleSubproject(name, unitTests, functionalTests, crossVersionTests, name in slowSubprojects)
+        return GradleSubproject(name, unitTests, functionalTests, crossVersionTests)
     }
 }

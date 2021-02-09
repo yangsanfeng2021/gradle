@@ -18,19 +18,22 @@ package org.gradle.api.internal;
 
 import org.gradle.StartParameter;
 import org.gradle.initialization.StartParameterBuildOptions.ConfigurationCacheProblemsOption;
+import org.gradle.internal.watch.vfs.WatchMode;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newLinkedHashSet;
+import static org.gradle.api.internal.SettingsInternal.BUILD_SRC;
 import static org.gradle.internal.Cast.uncheckedCast;
 
 public class StartParameterInternal extends StartParameter {
-    private boolean watchFileSystem;
+    private WatchMode watchFileSystemMode = WatchMode.DEFAULT;
     private boolean watchFileSystemDebugLogging;
-    private boolean watchFileSystemUsingDeprecatedOption;
     private boolean vfsVerboseLogging;
 
     private boolean configurationCache;
@@ -38,6 +41,8 @@ public class StartParameterInternal extends StartParameter {
     private int configurationCacheMaxProblems = 512;
     private boolean configurationCacheRecreateCache;
     private boolean configurationCacheQuiet;
+    private boolean searchUpwards = true;
+    private boolean useEmptySettings = false;
 
     @Override
     public StartParameter newInstance() {
@@ -52,15 +57,16 @@ public class StartParameterInternal extends StartParameter {
     @Override
     protected StartParameter prepareNewBuild(StartParameter startParameter) {
         StartParameterInternal p = (StartParameterInternal) super.prepareNewBuild(startParameter);
-        p.watchFileSystem = watchFileSystem;
+        p.watchFileSystemMode = watchFileSystemMode;
         p.watchFileSystemDebugLogging = watchFileSystemDebugLogging;
-        p.watchFileSystemUsingDeprecatedOption = watchFileSystemUsingDeprecatedOption;
         p.vfsVerboseLogging = vfsVerboseLogging;
         p.configurationCache = configurationCache;
         p.configurationCacheProblems = configurationCacheProblems;
         p.configurationCacheMaxProblems = configurationCacheMaxProblems;
         p.configurationCacheRecreateCache = configurationCacheRecreateCache;
         p.configurationCacheQuiet = configurationCacheQuiet;
+        p.searchUpwards = searchUpwards;
+        p.useEmptySettings = useEmptySettings;
         return p;
     }
 
@@ -72,28 +78,28 @@ public class StartParameterInternal extends StartParameter {
         this.gradleHomeDir = gradleHomeDir;
     }
 
-    public void useEmptySettingsWithoutDeprecationWarning() {
-        doUseEmptySettings();
+    public boolean isSearchUpwards() {
+        return searchUpwards && !useLocationAsProjectRoot(getProjectDir(), getTaskNames());
     }
 
-    public boolean isUseEmptySettingsWithoutDeprecationWarning() {
-        return super.useEmptySettings;
+    public void doNotSearchUpwards() {
+        this.searchUpwards = false;
     }
 
-    public boolean isSearchUpwardsWithoutDeprecationWarning() {
-        return super.searchUpwards;
+    public boolean isUseEmptySettings() {
+        return useEmptySettings;
     }
 
-    public void setSearchUpwardsWithoutDeprecationWarning(boolean searchUpwards) {
-        super.searchUpwards = searchUpwards;
+    public void useEmptySettings() {
+        this.useEmptySettings = true;
     }
 
-    public boolean isWatchFileSystem() {
-        return watchFileSystem;
+    public WatchMode getWatchFileSystemMode() {
+        return watchFileSystemMode;
     }
 
-    public void setWatchFileSystem(boolean watchFileSystem) {
-        this.watchFileSystem = watchFileSystem;
+    public void setWatchFileSystemMode(WatchMode watchFileSystemMode) {
+        this.watchFileSystemMode = watchFileSystemMode;
     }
 
     public boolean isWatchFileSystemDebugLogging() {
@@ -102,14 +108,6 @@ public class StartParameterInternal extends StartParameter {
 
     public void setWatchFileSystemDebugLogging(boolean watchFileSystemDebugLogging) {
         this.watchFileSystemDebugLogging = watchFileSystemDebugLogging;
-    }
-
-    public boolean isWatchFileSystemUsingDeprecatedOption() {
-        return watchFileSystemUsingDeprecatedOption;
-    }
-
-    public void setWatchFileSystemUsingDeprecatedOption(boolean watchFileSystemUsingDeprecatedOption) {
-        this.watchFileSystemUsingDeprecatedOption = watchFileSystemUsingDeprecatedOption;
     }
 
     public boolean isVfsVerboseLogging() {
@@ -171,5 +169,17 @@ public class StartParameterInternal extends StartParameter {
             setTaskNames(allTasks);
         }
         return added;
+    }
+
+    /**
+     * The following special behavior wrt. how the build root is discovered, is implemented:
+     * - If the current folder is called 'buildSrc', we do not search upwards for a settings file
+     * - If the build runs the 'init' task, we do not search upwards for a settings file
+     *
+     * This has an influence on deciding which 'gradle.properties' to load (in the launcher) and which 'settings.gradle(.kts)' to use (in the daemon)
+     */
+    public static boolean useLocationAsProjectRoot(@Nullable File potentialProjectLocation, List<String> requestedTaskNames) {
+        return requestedTaskNames.contains("init")
+            || (potentialProjectLocation != null && potentialProjectLocation.getName().equals(BUILD_SRC));
     }
 }

@@ -48,10 +48,10 @@ abstract class AbstractSmokeTest extends Specification {
 
     protected static final AndroidGradlePluginVersions AGP_VERSIONS = new AndroidGradlePluginVersions()
     protected static final KotlinGradlePluginVersions KOTLIN_VERSIONS = new KotlinGradlePluginVersions()
-    protected static final String AGP_3_ITERATION_MATCHER = ".*agp=3\\..*"
     protected static final String AGP_4_0_ITERATION_MATCHER = ".*agp=4\\.0\\..*"
     protected static final String AGP_4_1_ITERATION_MATCHER = ".*agp=4\\.1\\..*"
     protected static final String AGP_4_2_ITERATION_MATCHER = ".*agp=4\\.2\\..*"
+    protected static final String AGP_7_ITERATION_MATCHER = ".*agp=7\\..*"
 
     static class TestedVersions {
         /**
@@ -78,7 +78,7 @@ abstract class AbstractSmokeTest extends Specification {
         static shadow = Versions.of("4.0.4", "5.2.0", "6.0.0", "6.1.0")
 
         // https://github.com/asciidoctor/asciidoctor-gradle-plugin/releases
-        static asciidoctor = Versions.of("2.3.0", "3.0.0", "3.3.0")
+        static asciidoctor = Versions.of("3.3.0")
 
         // https://plugins.gradle.org/plugin/com.github.spotbugs
         static spotbugs = "4.6.0"
@@ -98,12 +98,12 @@ abstract class AbstractSmokeTest extends Specification {
         // https://developer.android.com/studio/releases/build-tools
         static androidTools = "29.0.3"
         // https://developer.android.com/studio/releases/gradle-plugin
-        static androidGradle = Versions.of(*AGP_VERSIONS.latestsPlusNightly)
+        static androidGradle = Versions.of(*AGP_VERSIONS.getLatestsFromMinorPlusNightly("4.0"))
 
         // https://search.maven.org/search?q=g:org.jetbrains.kotlin%20AND%20a:kotlin-project&core=gav
         static kotlin = Versions.of(*KOTLIN_VERSIONS.latests.findAll {
             def lowerCaseVersion = it.toLowerCase(Locale.US)
-            !lowerCaseVersion.contains('-m') && !lowerCaseVersion.contains('-rc') && !(lowerCaseVersion.contains('-beta'))
+            !lowerCaseVersion.contains('-m') && !(lowerCaseVersion.contains('-beta'))
         })
 
         // https://plugins.gradle.org/plugin/org.gretty
@@ -116,7 +116,7 @@ abstract class AbstractSmokeTest extends Specification {
         static gradleVersions = "0.36.0"
 
         // https://plugins.gradle.org/plugin/org.gradle.playframework
-        static playframework = "0.10"
+        static playframework = "0.11"
 
         // https://plugins.gradle.org/plugin/net.ltgt.errorprone
         static errorProne = "1.3.0"
@@ -126,7 +126,7 @@ abstract class AbstractSmokeTest extends Specification {
         static protobufTools = "3.13.0"
 
         // https://plugins.gradle.org/plugin/org.gradle.test-retry
-        static testRetryPlugin = "1.2.0"
+        static testRetryPlugin = "1.1.9"
 
         // https://plugins.gradle.org/plugin/com.jfrog.artifactory
         static artifactoryPlugin = "4.18.0"
@@ -134,6 +134,45 @@ abstract class AbstractSmokeTest extends Specification {
 
         // https://plugins.gradle.org/plugin/io.freefair.aspectj
         static aspectj = "5.3.0"
+
+        // https://plugins.gradle.org/plugin/de.undercouch.download
+        static undercouchDownload = Versions.of("4.1.1")
+
+        // https://github.com/micronaut-projects/micronaut-gradle-plugin
+        static micronaut = Versions.of("1.3.2")
+
+        // https://plugins.gradle.org/plugin/com.gorylenko.gradle-git-properties
+        static gradleGitProperties = Versions.of("2.2.4")
+
+        // https://plugins.gradle.org/plugin/org.flywaydb.flyway
+        static flyway = Versions.of("7.5.1")
+
+        // https://plugins.gradle.org/plugin/net.ltgt.apt
+        static apt = Versions.of("0.21")
+
+        // https://plugins.gradle.org/plugin/io.gitlab.arturbosch.detekt
+        static detekt = Versions.of("1.15.0")
+
+        // https://plugins.gradle.org/plugin/com.diffplug.spotless
+        static spotless = Versions.of("5.9.0")
+
+        // https://plugins.gradle.org/plugin/com.google.cloud.tools.jib
+        static jib = Versions.of("2.7.1")
+
+        // https://plugins.gradle.org/plugin/io.freefair.lombok
+        static lombok = Versions.of("5.3.0")
+
+        // https://plugins.gradle.org/plugin/org.jetbrains.kotlin.plugin.allopen
+        // https://plugins.gradle.org/plugin/org.jetbrains.kotlin.plugin.spring
+        static kotlinPlugins = Versions.of("1.4.21-2", "1.4.30")
+
+        // https://plugins.gradle.org/plugin/com.moowork.grunt
+        // https://plugins.gradle.org/plugin/com.moowork.gulp
+        // https://plugins.gradle.org/plugin/com.moowork.node
+        static node = Versions.of("1.3.1")
+
+        // https://plugins.gradle.org/plugin/org.jlleitschuh.gradle.ktlint
+        static ktlint = Versions.of("9.4.1")
     }
 
     static class Versions implements Iterable<String> {
@@ -221,7 +260,6 @@ abstract class AbstractSmokeTest extends Specification {
 
     private static List<String> outputParameters() {
         return [
-            '--stacktrace',
             '--warning-mode=all',
             "-D${LoggingDeprecatedFeatureHandler.ORG_GRADLE_DEPRECATION_TRACE_PROPERTY_NAME}=false" as String,
         ]
@@ -334,4 +372,5 @@ abstract class AbstractSmokeTest extends Specification {
     void copyRemoteProject(String remoteProject, File targetDir) {
         new TestFile(new File("build/$remoteProject")).copyTo(targetDir)
     }
+
 }

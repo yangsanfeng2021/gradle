@@ -30,6 +30,7 @@ import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.PluginContainer;
+import org.gradle.api.plugins.jvm.internal.JvmPluginServices;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.plugins.ear.descriptor.DeploymentDescriptor;
@@ -42,6 +43,8 @@ import java.util.concurrent.Callable;
  * <p>
  * A {@link Plugin} with tasks which assemble a web application into a EAR file.
  * </p>
+ *
+ * @see <a href="https://docs.gradle.org/current/userguide/ear_plugin.html">EAR plugin reference</a>
  */
 public class EarPlugin implements Plugin<Project> {
 
@@ -53,6 +56,7 @@ public class EarPlugin implements Plugin<Project> {
     static final String DEFAULT_LIB_DIR_NAME = "lib";
 
     private final ObjectFactory objectFactory;
+    private final JvmPluginServices jvmPluginServices;
 
     /**
      * Injects an {@link ObjectFactory}
@@ -60,8 +64,9 @@ public class EarPlugin implements Plugin<Project> {
      * @since 4.2
      */
     @Inject
-    public EarPlugin(ObjectFactory objectFactory) {
+    public EarPlugin(ObjectFactory objectFactory, JvmPluginServices jvmPluginServices) {
         this.objectFactory = objectFactory;
+        this.jvmPluginServices = jvmPluginServices;
     }
 
     @Override
@@ -188,13 +193,16 @@ public class EarPlugin implements Plugin<Project> {
     }
 
     private void configureConfigurations(final Project project) {
-
+        // Currently 'deploy' and 'earlib' are both _resolvable_ and _consumable_.
+        // In the future, it would be good to split these so that the attributes can differ.
+        // Then 'jvmPluginServices.configureAsRuntimeClasspath()' may be used to configure the resolving configurations.
         ConfigurationContainer configurations = project.getConfigurations();
         Configuration moduleConfiguration = configurations.create(DEPLOY_CONFIGURATION_NAME).setVisible(false)
             .setTransitive(false).setDescription("Classpath for deployable modules, not transitive.");
+        jvmPluginServices.configureAttributes(moduleConfiguration, details -> details.library().runtimeUsage().withExternalDependencies());
         Configuration earlibConfiguration = configurations.create(EARLIB_CONFIGURATION_NAME).setVisible(false)
             .setDescription("Classpath for module dependencies.");
-
+        jvmPluginServices.configureAttributes(earlibConfiguration, details -> details.library().runtimeUsage().withExternalDependencies());
         configurations.getByName(Dependency.DEFAULT_CONFIGURATION)
             .extendsFrom(moduleConfiguration, earlibConfiguration);
     }

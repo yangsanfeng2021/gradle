@@ -37,7 +37,7 @@ abstract class BasicGroovyCompilerIntegrationSpec extends MultiVersionIntegratio
     @Rule
     TestResources resources = new TestResources(temporaryFolder)
 
-    String groovyDependency = "org.codehaus.groovy:groovy-all:$version"
+    String groovyDependency
 
     String getGroovyVersionNumber() {
         version.split(":", 2)[0]
@@ -47,6 +47,7 @@ abstract class BasicGroovyCompilerIntegrationSpec extends MultiVersionIntegratio
         // necessary for picking up some of the output/errorOutput when forked executer is used
         executer.withArgument("-i")
         executer.withRepositoryMirrors()
+        groovyDependency = "org.codehaus.groovy:groovy-all:$version"
     }
 
     def "compileGoodCode"() {
@@ -380,7 +381,7 @@ abstract class BasicGroovyCompilerIntegrationSpec extends MultiVersionIntegratio
 
         expect:
         fails("compileGroovy")
-        failure.assertHasCause("File '${file('groovycompilerconfig.groovy')}' specified for property 'groovyOptions.configurationScript' does not exist.")
+        failureDescriptionContains("File '${file('groovycompilerconfig.groovy')}' specified for property 'groovyOptions.configurationScript' does not exist.")
     }
 
     def "failsBecauseOfInvalidConfigFile"() {

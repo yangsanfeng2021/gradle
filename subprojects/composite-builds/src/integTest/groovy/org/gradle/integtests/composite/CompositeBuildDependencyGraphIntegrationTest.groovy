@@ -709,7 +709,7 @@ afterEvaluate {
         checkDependenciesFails()
 
         then:
-        failure.assertHasCause("No matching configuration of project :buildC was found. The consumer was configured to find a runtime of a library compatible with Java ${JavaVersion.current().majorVersion}, packaged as a jar, and its dependencies declared externally but:\n" +
+        failure.assertHasCause("No matching configuration of project :buildC was found. The consumer was configured to find a runtime of a library compatible with Java ${JavaVersion.current().majorVersion}, packaged as a jar, preferably optimized for standard JVMs, and its dependencies declared externally but:\n" +
             "  - None of the consumable configurations have attributes.")
     }
 
@@ -742,6 +742,7 @@ afterEvaluate {
 
             task buildOutputs {
                 inputs.files configurations.buildInputs
+                outputs.upToDateWhen { false }
                 doLast {
                     configurations.buildInputs.each { }
                 }

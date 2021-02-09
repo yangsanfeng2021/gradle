@@ -10,7 +10,14 @@ class BuildDistributions(model: CIBuildModel, stage: Stage) : BaseGradleBuildTyp
     name = "Build Distributions"
     description = "Creation and verification of the distribution and documentation"
 
-    applyDefaults(model, this, "packageBuild", extraParameters = buildScanTag("BuildDistributions") + " -PtestJavaHome=${LINUX.buildJavaHome()}")
+    applyDefaults(
+        model,
+        this,
+        "packageBuild",
+        extraParameters = buildScanTag("BuildDistributions") +
+            " -PtestJavaVersion=${LINUX.buildJavaVersion.major}" +
+            " -Porg.gradle.java.installations.auto-download=false"
+    )
 
     features {
         publishBuildStatusToGithub(model)
@@ -22,6 +29,6 @@ class BuildDistributions(model: CIBuildModel, stage: Stage) : BaseGradleBuildTyp
     """.trimIndent()
 
     params {
-        param("env.JAVA_HOME", LINUX.buildJavaHome())
+        param("env.JAVA_HOME", LINUX.javaHomeForGradle())
     }
 })

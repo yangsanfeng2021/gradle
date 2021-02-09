@@ -1,11 +1,26 @@
 [ {
-  "scenario" : "org.gradle.performance.regression.android.RealLifeAndroidBuildPerformanceTest.abi change",
+  "scenario" : "org.gradle.performance.regression.android.RealLifeAndroidBuildPerformanceTest.clean assembleDebug with clean transforms cache",
+  "durations" : [ {
+    "testProject" : "largeAndroidBuild",
+    "linux" : 2406000
+  }, {
+    "testProject" : "santaTrackerAndroidBuild",
+    "linux" : 3659000
+  } ]
+}, {
+    "scenario" : "org.gradle.performance.regression.android.RealLifeAndroidBuildPerformanceTest.clean phthalic:assembleDebug with clean transforms cache",
+    "durations" : [ {
+        "testProject" : "largeAndroidBuild",
+        "linux" : 1775000
+    } ]
+}, {
+  "scenario" : "org.gradle.performance.regression.android.AndroidIncrementalExecutionPerformanceTest.abi change",
   "durations" : [ {
     "testProject" : "santaTrackerAndroidBuild",
     "linux" : 796000
   } ]
 }, {
-  "scenario" : "org.gradle.performance.regression.android.RealLifeAndroidBuildPerformanceTest.non-abi change",
+  "scenario" : "org.gradle.performance.regression.android.AndroidIncrementalExecutionPerformanceTest.non-abi change",
   "durations" : [ {
     "testProject" : "santaTrackerAndroidBuild",
     "linux" : 527000
@@ -13,9 +28,6 @@
 }, {
   "scenario" : "org.gradle.performance.regression.android.RealLifeAndroidBuildPerformanceTest.run assembleDebug",
   "durations" : [ {
-    "testProject" : "k9AndroidBuild",
-    "linux" : 184000
-  }, {
     "testProject" : "largeAndroidBuild",
     "linux" : 702000
   }, {
@@ -31,31 +43,16 @@
 }, {
   "scenario" : "org.gradle.performance.regression.android.RealLifeAndroidBuildPerformanceTest.run help",
   "durations" : [ {
-    "testProject" : "k9AndroidBuild",
+    "testProject" : "santaTrackerAndroidBuild",
     "linux" : 133000
   }, {
     "testProject" : "largeAndroidBuild",
     "linux" : 229000
   } ]
 }, {
-  "scenario" : "org.gradle.performance.regression.android.RealLifeAndroidBuildSlowPerformanceTest.clean assembleDebug with clean transforms cache",
-  "durations" : [ {
-    "testProject" : "largeAndroidBuild",
-    "linux" : 2406000
-  }, {
-    "testProject" : "santaTrackerAndroidBuild",
-    "linux" : 3659000
-  } ]
-}, {
-  "scenario" : "org.gradle.performance.regression.android.RealLifeAndroidBuildSlowPerformanceTest.clean phthalic:assembleDebug with clean transforms cache",
-  "durations" : [ {
-    "testProject" : "largeAndroidBuild",
-    "linux" : 1775000
-  } ]
-}, {
   "scenario" : "org.gradle.performance.regression.android.RealLifeAndroidStudioMockupPerformanceTest.get IDE model for Android Studio",
   "durations" : [ {
-    "testProject" : "k9AndroidBuild",
+    "testProject" : "santaTrackerAndroidBuild",
     "linux" : 222000
   }, {
     "testProject" : "largeAndroidBuild",
@@ -176,56 +173,36 @@
     "linux" : 237000
   } ]
 }, {
-  "scenario" : "org.gradle.performance.regression.corefeature.FileSystemWatchingPerformanceTest.assemble for abi change with file system watching",
+  "scenario" : "org.gradle.performance.regression.android.AndroidIncrementalExecutionPerformanceTest.abi change with configuration caching",
   "durations" : [ {
-    "testProject" : "largeJavaMultiProject",
-    "linux" : 455000,
-    "windows" : 954000,
-    "macOs" : 887000
-  }, {
     "testProject" : "santaTrackerAndroidBuild",
     "linux" : 757000,
     "windows" : 1002000,
     "macOs" : 1269000
   } ]
 }, {
-  "scenario" : "org.gradle.performance.regression.corefeature.FileSystemWatchingPerformanceTest.assemble for abi change with file system watching and configuration caching",
+  "scenario" : "org.gradle.performance.regression.java.JavaIncrementalExecutionIntegrationTest.assemble for abi change with configuration caching",
   "durations" : [ {
     "testProject" : "largeJavaMultiProject",
     "linux" : 455000,
     "windows" : 954000,
     "macOs" : 887000
-  }, {
-    "testProject" : "santaTrackerAndroidBuild",
-    "linux" : 757000,
-    "windows" : 1002000,
-    "macOs" : 1269000
   } ]
 }, {
-  "scenario" : "org.gradle.performance.regression.corefeature.FileSystemWatchingPerformanceTest.assemble for non-abi change with file system watching",
+  "scenario" : "org.gradle.performance.regression.android.AndroidIncrementalExecutionPerformanceTest.non-abi change with configuration caching",
   "durations" : [ {
-    "testProject" : "largeJavaMultiProject",
-    "linux" : 433000,
-    "windows" : 821000,
-    "macOs" : 836000
-  }, {
     "testProject" : "santaTrackerAndroidBuild",
     "linux" : 390000,
     "windows" : 612000,
     "macOs" : 723000
   } ]
 }, {
-  "scenario" : "org.gradle.performance.regression.corefeature.FileSystemWatchingPerformanceTest.assemble for non-abi change with file system watching and configuration caching",
+  "scenario" : "org.gradle.performance.regression.java.JavaIncrementalExecutionIntegrationTest.assemble for non-abi change with configuration caching",
   "durations" : [ {
     "testProject" : "largeJavaMultiProject",
     "linux" : 433000,
     "windows" : 821000,
     "macOs" : 836000
-  }, {
-    "testProject" : "santaTrackerAndroidBuild",
-    "linux" : 390000,
-    "windows" : 612000,
-    "macOs" : 723000
   } ]
 }, {
   "scenario" : "org.gradle.performance.regression.corefeature.IdeIntegrationPerformanceTest.eclipse",
@@ -345,7 +322,7 @@
     "linux" : 212000
   } ]
 }, {
-  "scenario" : "org.gradle.performance.regression.java.JavaABIChangePerformanceTest.assemble for abi change",
+  "scenario" : "org.gradle.performance.regression.java.JavaIncrementalExecutionIntegrationTest.assemble for abi change",
   "durations" : [ {
     "testProject" : "largeGroovyMultiProject",
     "linux" : 725000
@@ -480,7 +457,7 @@
     "linux" : 122000
   } ]
 }, {
-  "scenario" : "org.gradle.performance.regression.java.JavaNonABIChangePerformanceTest.assemble for non-abi change",
+  "scenario" : "org.gradle.performance.regression.java.JavaIncrementalExecutionIntegrationTest.assemble for non-abi change",
   "durations" : [ {
     "testProject" : "largeGroovyMultiProject",
     "linux" : 623000
@@ -513,7 +490,7 @@
     "linux" : 144000
   } ]
 }, {
-  "scenario" : "org.gradle.performance.regression.java.JavaTestChangePerformanceTest.test for non-abi change",
+  "scenario" : "org.gradle.performance.regression.java.JavaIncrementalExecutionIntegrationTest.test for non-abi change",
   "durations" : [ {
     "testProject" : "largeJavaMultiProject",
     "linux" : 589000
@@ -525,7 +502,7 @@
     "linux" : 289000
   } ]
 }, {
-  "scenario" : "org.gradle.performance.regression.java.JavaUpToDatePerformanceTest.up-to-date assemble (parallel false)",
+  "scenario" : "org.gradle.performance.regression.java.JavaIncrementalExecutionIntegrationTest.up-to-date assemble (parallel false)",
   "durations" : [ {
     "testProject" : "largeJavaMultiProject",
     "linux" : 682000
@@ -534,14 +511,14 @@
     "linux" : 299000
   } ]
 }, {
-  "scenario" : "org.gradle.performance.regression.java.JavaUpToDatePerformanceTest.up-to-date assemble (parallel true)",
+  "scenario" : "org.gradle.performance.regression.java.JavaIncrementalExecutionIntegrationTest.up-to-date assemble (parallel true)",
   "durations" : [ {
     "testProject" : "largeJavaMultiProject",
     "linux" : 474000,
     "windows" : 1391000
   } ]
 }, {
-  "scenario" : "org.gradle.performance.regression.java.JavaUpToDatePerformanceTest.up-to-date assemble with local build cache enabled (parallel false)",
+  "scenario" : "org.gradle.performance.regression.java.JavaIncrementalExecutionIntegrationTest.up-to-date assemble with local build cache enabled (parallel false)",
   "durations" : [ {
     "testProject" : "largeJavaMultiProject",
     "linux" : 714000
@@ -550,7 +527,7 @@
     "linux" : 309000
   } ]
 }, {
-  "scenario" : "org.gradle.performance.regression.java.JavaUpToDatePerformanceTest.up-to-date assemble with local build cache enabled (parallel true)",
+  "scenario" : "org.gradle.performance.regression.java.JavaIncrementalExecutionIntegrationTest.up-to-date assemble with local build cache enabled (parallel true)",
   "durations" : [ {
     "testProject" : "largeJavaMultiProject",
     "linux" : 477000

@@ -23,7 +23,6 @@ import org.gradle.internal.operations.OperationIdentifier;
 import javax.annotation.Nullable;
 
 public interface ContextAwareTaskLogger extends Logger {
-
     interface MessageRewriter {
 
         /**

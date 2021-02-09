@@ -53,14 +53,14 @@ class DefaultTaskTest extends AbstractTaskTest {
         Thread.currentThread().contextClassLoader = cl
     }
 
-    AbstractTask getTask() {
+    DefaultTask getTask() {
         defaultTask
     }
 
     def "default task"() {
         given:
         def identity = TaskIdentity.create(TEST_TASK_NAME, Task, project)
-        Task task = AbstractTask.injectIntoNewInstance(project, identity, { new DefaultTask() } as Callable)
+        Task task = DefaultTask.injectIntoNewInstance(project, identity, { new DefaultTask() } as Callable)
 
         expect:
         task.dependsOn.isEmpty()
@@ -76,7 +76,7 @@ class DefaultTaskTest extends AbstractTaskTest {
     def "can inject values into task when using no-args constructor"() {
         given:
         def identity = TaskIdentity.create(TEST_TASK_NAME, Task, project)
-        def task = AbstractTask.injectIntoNewInstance(project, identity, { new DefaultTask() } as Callable)
+        def task = DefaultTask.injectIntoNewInstance(project, identity, { new DefaultTask() } as Callable)
 
         expect:
         task.project.is(project)
@@ -525,12 +525,29 @@ class DefaultTaskTest extends AbstractTaskTest {
         task.actions[0].displayName == "Execute unnamed action"
     }
 
+    def "can detect tasks with custom actions added"() {
+        expect:
+        !task.hasCustomActions
+
+        when:
+        task.prependParallelSafeAction {}
+
+        then:
+        !task.hasCustomActions
+
+        when:
+        task.doFirst {}
+
+        then:
+        task.hasCustomActions
+    }
+
     def "can rewrite task logger warnings"() {
         given:
         def rewriter = Mock(ContextAwareTaskLogger.MessageRewriter)
 
         when:
-        task.setLoggerMessageRewriter(rewriter)
+        task.logger.setMessageRewriter(rewriter)
         task.logger.warn("test")
 
         then:

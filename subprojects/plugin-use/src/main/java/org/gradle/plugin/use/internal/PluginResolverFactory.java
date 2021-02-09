@@ -27,8 +27,8 @@ import org.gradle.plugin.use.resolve.internal.CorePluginResolver;
 import org.gradle.plugin.use.resolve.internal.NoopPluginResolver;
 import org.gradle.plugin.use.resolve.internal.PluginResolver;
 import org.gradle.plugin.use.resolve.internal.PluginResolverContributor;
-import org.gradle.plugin.use.resolve.service.internal.DefaultInjectedClasspathPluginResolver;
 import org.gradle.plugin.use.resolve.service.internal.ClientInjectedClasspathPluginResolver;
+import org.gradle.plugin.use.resolve.service.internal.DefaultInjectedClasspathPluginResolver;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -78,7 +78,7 @@ public class PluginResolverFactory implements Factory<PluginResolver> {
      *     <li>{@link NoopPluginResolver} - Only used in tests.</li>
      *     <li>{@link CorePluginResolver} - distributed with Gradle</li>
      *     <li>{@link DefaultInjectedClasspathPluginResolver} - from a TestKit test's ClassPath</li>
-     *     <li>Resolvers contributed by this distribution.</li>
+     *     <li>Resolvers contributed by this distribution - plugins coming from included builds</li>
      *     <li>Resolvers based on the entries of the `pluginRepositories` block</li>
      *     <li>{@link org.gradle.plugin.use.resolve.internal.ArtifactRepositoriesPluginResolver} - from Gradle Plugin Portal if no `pluginRepositories` were defined</li>
      * </ol>
@@ -92,9 +92,7 @@ public class PluginResolverFactory implements Factory<PluginResolver> {
 
         injectedClasspathPluginResolver.collectResolversInto(resolvers);
 
-        for (PluginResolverContributor contributor : pluginResolverContributors) {
-            contributor.collectResolversInto(resolvers);
-        }
+        pluginResolverContributors.forEach(contributor -> contributor.collectResolversInto(resolvers));
         resolvers.add(ArtifactRepositoriesPluginResolver.createWithDefaults(dependencyResolutionServices, versionSelectorScheme));
     }
 }

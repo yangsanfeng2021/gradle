@@ -16,6 +16,7 @@
 
 package org.gradle.performance.regression.android
 
+import org.gradle.integtests.fixtures.versions.AndroidGradlePluginVersions
 import org.gradle.performance.AbstractCrossVersionPerformanceTest
 import org.gradle.performance.android.GetModel
 import org.gradle.performance.android.SyncAction
@@ -23,23 +24,24 @@ import org.gradle.performance.annotations.RunFor
 import org.gradle.performance.annotations.Scenario
 import org.gradle.performance.fixture.AndroidTestProject
 
-import static org.gradle.performance.annotations.ScenarioType.TEST
+import static org.gradle.performance.annotations.ScenarioType.PER_COMMIT
 import static org.gradle.performance.results.OperatingSystem.LINUX
 
 @RunFor(
-    @Scenario(type = TEST, operatingSystems = [LINUX], testProjects = ["largeAndroidBuild", "k9AndroidBuild"])
+    @Scenario(type = PER_COMMIT, operatingSystems = [LINUX], testProjects = ["largeAndroidBuild", "santaTrackerAndroidBuild"])
 )
 class RealLifeAndroidStudioMockupPerformanceTest extends AbstractCrossVersionPerformanceTest {
 
     def "get IDE model for Android Studio"() {
         given:
+        runner.args = [AndroidGradlePluginVersions.OVERRIDE_VERSION_CHECK]
         def testProject = AndroidTestProject.projectFor(runner.testProject)
         testProject.configure(runner)
-        int iterations = (testProject == AndroidTestProject.K9_ANDROID) ? 200 : 40
-        runner.warmUpRuns = iterations
-        runner.runs = iterations
-        runner.minimumBaseVersion = "5.4.1"
-        runner.targetVersions = ["6.8-20201108230029+0000"]
+        AndroidTestProject.useStableAgpVersion(runner)
+        runner.warmUpRuns = 40
+        runner.runs = 40
+        runner.minimumBaseVersion = "6.5"
+        runner.targetVersions = ["7.0-20210127230053+0000"]
 
         runner.toolingApi("Android Studio Sync") {
             it.action(new GetModel())

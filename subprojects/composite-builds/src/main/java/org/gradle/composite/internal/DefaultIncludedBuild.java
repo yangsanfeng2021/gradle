@@ -104,6 +104,11 @@ public class DefaultIncludedBuild extends AbstractCompositeParticipantBuildState
     }
 
     @Override
+    public boolean isPluginBuild() {
+        return buildDefinition.isPluginBuild();
+    }
+
+    @Override
     public File getProjectDir() {
         return buildDefinition.getBuildRootDir();
     }
@@ -150,6 +155,11 @@ public class DefaultIncludedBuild extends AbstractCompositeParticipantBuildState
     @Override
     public Action<? super DependencySubstitutions> getRegisteredDependencySubstitutions() {
         return buildDefinition.getDependencySubstitutions();
+    }
+
+    @Override
+    public boolean hasInjectedSettingsPlugins() {
+        return !buildDefinition.getInjectedPluginRequests().isEmpty();
     }
 
     @Override

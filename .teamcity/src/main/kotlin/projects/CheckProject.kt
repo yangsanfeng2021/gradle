@@ -26,7 +26,7 @@ class CheckProject(
 
     var prevStage: Stage? = null
     model.stages.forEach { stage ->
-        val stageProject = StageProject(model, functionalTestBucketProvider, performanceTestBucketProvider, stage, id!!.value)
+        val stageProject = StageProject(model, functionalTestBucketProvider, performanceTestBucketProvider, stage, uuid)
         val stagePasses = StagePasses(model, stage, prevStage, stageProject)
         buildType(stagePasses)
         subProject(stageProject)

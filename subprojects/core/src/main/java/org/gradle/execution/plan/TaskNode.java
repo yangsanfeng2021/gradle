@@ -113,6 +113,15 @@ public abstract class TaskNode extends Node {
     }
 
     @Override
+    public Iterable<Node> getHardSuccessors() {
+        return Iterables.concat(
+            finalizingSuccessors,
+            mustSuccessors,
+            super.getHardSuccessors()
+        );
+    }
+
+    @Override
     public Iterable<Node> getAllSuccessorsInReverseOrder() {
         return Iterables.concat(
             super.getAllSuccessorsInReverseOrder(),
@@ -160,7 +169,7 @@ public abstract class TaskNode extends Node {
     private void deprecateLifecycleHookReferencingNonLocalTask(String hookName, Node taskNode) {
         if (taskNode instanceof TaskInAnotherBuild) {
             DeprecationLogger.deprecateAction("Using " + hookName + " to reference tasks from another build")
-                .willBecomeAnErrorInGradle7()
+                .willBecomeAnErrorInGradle8()
                 .withUpgradeGuideSection(6, "referencing_tasks_from_included_builds")
                 .nagUser();
         }
